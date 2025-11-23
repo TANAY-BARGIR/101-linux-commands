@@ -1,0 +1,60 @@
+{
+    "name": "DevOps Daily",
+    "short_name": "DevOps Daily",
+    "description": "The latest DevOps news, tutorials, and guides for modern teams",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#3b82f6",
+    "orientation": "portrait-primary",
+    "icons": [
+      {
+        "src": "/android-chrome-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/android-chrome-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/favicon-16x16.png",
+        "sizes": "16x16",
+        "type": "image/png"
+      },
+      {
+        "src": "/favicon-32x32.png",
+        "sizes": "32x32",
+        "type": "image/png"
+      },
+      {
+        "src": "/apple-touch-icon.png",
+        "sizes": "180x180",
+        "type": "image/png"
+      }
+    ],
+    "shortcuts": [
+      {
+        "name": "Latest Posts",
+        "short_name": "Posts",
+        "description": "View the latest DevOps articles",
+        "url": "/posts",
+        "icons": [{ "src": "/shortcuts/logo.png", "sizes": "96x96" }]
+      },
+      {
+        "name": "Guides",
+        "short_name": "Guides",
+        "description": "Browse in-depth DevOps guides",
+        "url": "/guides",
+        "icons": [{ "src": "/shortcuts/logo.png", "sizes": "96x96" }]
+      }
+    ],
+    "categories": ["technology", "education", "devops", "cloud"],
+    "lang": "en-US",
+    "dir": "ltr",
+    "prefer_related_applications": false,
+    "related_applications": []
+}

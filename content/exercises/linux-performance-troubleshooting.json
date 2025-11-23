@@ -1,0 +1,272 @@
+{
+  "id": "linux-performance-troubleshooting",
+  "title": "Linux Performance Tuning and Troubleshooting",
+  "description": "Master essential Linux performance analysis and optimization techniques to diagnose and resolve system bottlenecks.",
+  "category": {
+    "name": "Linux",
+    "slug": "linux"
+  },
+  "difficulty": "intermediate",
+  "estimatedTime": "80 minutes",
+  "technologies": ["Linux", "bash", "systemd", "performance tools"],
+  "prerequisites": ["Linux command line basics", "Understanding of system processes", "Basic shell scripting"],
+  "learningObjectives": [
+    "Identify CPU, memory, and I/O bottlenecks",
+    "Use performance monitoring tools effectively",
+    "Optimize system resource allocation",
+    "Debug slow applications and services"
+  ],
+  "environment": "local",
+  "icon": "Terminal",
+  "publishedAt": "2025-11-19T10:00:00Z",
+  "author": {
+    "name": "DevOps Daily Team",
+    "slug": "devops-daily-team"
+  },
+  "tags": ["Linux", "Performance", "Troubleshooting", "System Administration", "Debugging"],
+  "steps": [
+    {
+      "id": "setup-environment",
+      "title": "Setup Test Environment",
+      "description": "Create a Docker container with performance monitoring tools and simulate various workloads.",
+      "commands": [
+        "docker run -it --name perf-lab ubuntu:22.04 bash",
+        "# In the container:",
+        "apt-get update",
+        "apt-get install -y htop iotop sysstat strace procps curl stress-ng"
+      ],
+      "codeExample": "# Dockerfile for performance lab\nFROM ubuntu:22.04\n\nRUN apt-get update && apt-get install -y \\\n    htop \\\n    iotop \\\n    sysstat \\\n    strace \\\n    procps \\\n    curl \\\n    stress-ng \\\n    vim \\\n    && rm -rf /var/lib/apt/lists/*\n\n# Enable sysstat\nRUN sed -i 's/ENABLED=\"false\"/ENABLED=\"true\"/' /etc/default/sysstat\n\nWORKDIR /lab\n\nCMD [\"/bin/bash\"]",
+      "hints": [
+        "Use Docker to avoid affecting your host system",
+        "Install all performance monitoring tools upfront"
+      ],
+      "validationCriteria": [
+        "Container is running",
+        "All monitoring tools are installed",
+        "sysstat is enabled"
+      ]
+    },
+    {
+      "id": "cpu-analysis",
+      "title": "CPU Performance Analysis",
+      "description": "Learn to identify and diagnose CPU bottlenecks using top, htop, and mpstat.",
+      "commands": [
+        "# Monitor overall CPU usage",
+        "top -bn1 | head -20",
+        "# Detailed per-CPU statistics",
+        "mpstat -P ALL 2 5",
+        "# Simulate CPU load",
+        "stress-ng --cpu 4 --timeout 30s &",
+        "# Monitor during load",
+        "htop",
+        "# Check CPU context switches",
+        "vmstat 2 10"
+      ],
+      "codeExample": "# cpu-monitor.sh - Continuous CPU monitoring script\n#!/bin/bash\n\necho \"=== CPU Performance Monitor ===\"\necho \"Starting at $(date)\"\necho \"\"\n\n# Check number of CPUs\necho \"CPU Count: $(nproc)\"\necho \"Load Average: $(uptime | awk -F'load average:' '{print $2}')\"\necho \"\"\n\n# Top CPU consuming processes\necho \"Top 10 CPU-consuming processes:\"\nps aux --sort=-%cpu | head -11\necho \"\"\n\n# CPU statistics\necho \"Per-CPU utilization:\"\nmpstat -P ALL 1 1\necho \"\"\n\n# Context switches and interrupts\necho \"Context switches and interrupts:\"\nvmstat 1 5\necho \"\"\n\n# CPU wait time (I/O bottleneck indicator)\necho \"CPU I/O wait time:\"\niostat -c 1 3",
+      "expectedOutput": "Identify high CPU usage processes and understand CPU metrics",
+      "validationCriteria": [
+        "Can read top/htop output",
+        "Understand CPU %wa (I/O wait)",
+        "Identify CPU-bound processes"
+      ],
+      "hints": [
+        "High %wa indicates I/O bottleneck, not CPU",
+        "Load average > CPU count suggests overload",
+        "Context switches indicate thread contention"
+      ]
+    },
+    {
+      "id": "memory-analysis",
+      "title": "Memory Analysis and Optimization",
+      "description": "Analyze memory usage, identify memory leaks, and understand the Linux memory management system.",
+      "commands": [
+        "# Check overall memory usage",
+        "free -h",
+        "# Detailed memory statistics",
+        "cat /proc/meminfo",
+        "# Find memory-hungry processes",
+        "ps aux --sort=-%mem | head -10",
+        "# Simulate memory pressure",
+        "stress-ng --vm 2 --vm-bytes 512M --timeout 30s &",
+        "# Monitor swap usage",
+        "vmstat -s",
+        "# Check for OOM killer activity",
+        "dmesg | grep -i 'out of memory'"
+      ],
+      "codeExample": "# memory-analyzer.sh\n#!/bin/bash\n\necho \"=== Memory Analysis Report ===\"\necho \"Generated at: $(date)\"\necho \"\"\n\n# Memory overview\necho \"Memory Overview:\"\nfree -h\necho \"\"\n\n# Memory by process\necho \"Top 10 memory consumers:\"\nps aux --sort=-%mem | awk 'NR<=10 {printf \"%-10s %-8s %-8s %s\\n\", $1, $2, $4\"%\", $11}'\necho \"\"\n\n# Swap usage\necho \"Swap Status:\"\nswapon --show\necho \"\"\n\n# Memory pressure\necho \"Memory Pressure Indicators:\"\necho \"  Total: $(free -m | awk 'NR==2 {print $2}') MB\"\necho \"  Used: $(free -m | awk 'NR==2 {print $3}') MB\"\necho \"  Free: $(free -m | awk 'NR==2 {print $4}') MB\"\necho \"  Available: $(free -m | awk 'NR==2 {print $7}') MB\"\necho \"  Buff/Cache: $(free -m | awk 'NR==2 {print $6}') MB\"\necho \"\"\n\n# Check for OOM events\necho \"Recent OOM Killer Events:\"\ndmesg | grep -i 'killed process' | tail -5",
+      "expectedOutput": "Understanding of available vs free memory and swap usage",
+      "validationCriteria": [
+        "Can interpret free command output",
+        "Understand difference between used and available memory",
+        "Identify memory leaks"
+      ],
+      "hints": [
+        "Available memory is more important than free memory",
+        "Buffers/cache is reclaimable memory",
+        "Swap usage can indicate memory pressure"
+      ]
+    },
+    {
+      "id": "io-analysis",
+      "title": "Disk I/O Performance Analysis",
+      "description": "Identify I/O bottlenecks and optimize disk operations.",
+      "commands": [
+        "# Monitor I/O statistics",
+        "iostat -x 2 5",
+        "# Per-process I/O",
+        "iotop -o",
+        "# Simulate I/O load",
+        "stress-ng --io 4 --hdd 2 --timeout 30s &",
+        "# Check disk latency",
+        "iostat -dx 1 5",
+        "# Find files being accessed",
+        "lsof | grep -E '(REG|DIR)' | head -20"
+      ],
+      "codeExample": "# io-monitor.sh\n#!/bin/bash\n\necho \"=== Disk I/O Performance Monitor ===\"\necho \"Timestamp: $(date)\"\necho \"\"\n\n# Overall I/O statistics\necho \"I/O Statistics Summary:\"\niostat -x 1 3 | tail -n +4\necho \"\"\n\n# Identify I/O heavy processes\necho \"Top I/O processes (requires root):\"\nif [ \"$EUID\" -eq 0 ]; then\n    iotop -b -n 1 -o | head -15\nelse\n    echo \"Run as root to see per-process I/O\"\nfi\necho \"\"\n\n# Disk usage hotspots\necho \"Disk Usage by Directory:\"\ndu -h --max-depth=1 / 2>/dev/null | sort -hr | head -10\necho \"\"\n\n# Check for slow I/O\necho \"I/O Wait Time:\"\niostat -c 1 3 | grep -E '(avg-cpu|iowait)'\necho \"\"\n\n# Open file descriptors\necho \"Open File Descriptors:\"\necho \"Total: $(lsof 2>/dev/null | wc -l)\"",
+      "expectedOutput": "Understand I/O metrics and identify I/O bottlenecks",
+      "validationCriteria": [
+        "Can read iostat output",
+        "Understand await and svctm metrics",
+        "Identify I/O-bound processes"
+      ],
+      "hints": [
+        "High %util suggests disk saturation",
+        "await is average wait time in milliseconds",
+        "High iowait in top indicates I/O bottleneck"
+      ]
+    },
+    {
+      "id": "network-performance",
+      "title": "Network Performance Monitoring",
+      "description": "Monitor network throughput, connections, and identify network-related bottlenecks.",
+      "commands": [
+        "# Install network tools",
+        "apt-get install -y iftop nethogs net-tools",
+        "# Check network statistics",
+        "netstat -s",
+        "# Active connections",
+        "ss -tunap",
+        "# Network interface statistics",
+        "ip -s link",
+        "# Monitor bandwidth usage",
+        "cat /proc/net/dev"
+      ],
+      "codeExample": "# network-monitor.sh\n#!/bin/bash\n\necho \"=== Network Performance Monitor ===\"\necho \"Time: $(date)\"\necho \"\"\n\n# Network interfaces and stats\necho \"Network Interfaces:\"\nip -s -h link show\necho \"\"\n\n# Active connections count\necho \"Connection Statistics:\"\necho \"  ESTABLISHED: $(ss -tan | grep ESTAB | wc -l)\"\necho \"  TIME_WAIT: $(ss -tan | grep TIME-WAIT | wc -l)\"\necho \"  LISTEN: $(ss -tln | grep LISTEN | wc -l)\"\necho \"\"\n\n# Top connections by state\necho \"Top 10 Remote Connections:\"\nss -tan state established | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -rn | head -10\necho \"\"\n\n# Network errors\necho \"Network Errors:\"\nnetstat -i | awk 'NR>2 {print $1, \"RX-ERR:\", $3, \"TX-ERR:\", $7}'\necho \"\"\n\n# Bandwidth usage snapshot\necho \"Current Bandwidth Usage:\"\ncat /proc/net/dev | awk 'NR>2 {printf \"%-10s RX: %10d bytes TX: %10d bytes\\n\", $1, $2, $10}'",
+      "expectedOutput": "Understanding of network metrics and connection states",
+      "validationCriteria": [
+        "Can identify number of connections",
+        "Understand TCP states",
+        "Monitor bandwidth usage"
+      ],
+      "hints": [
+        "Too many TIME_WAIT can indicate connection churn",
+        "High retransmits suggest network issues",
+        "Use ss instead of netstat (faster)"
+      ]
+    },
+    {
+      "id": "process-debugging",
+      "title": "Process-Level Debugging with strace",
+      "description": "Use strace to debug slow processes and understand system call behavior.",
+      "commands": [
+        "# Create a slow script to debug",
+        "cat > slow-app.sh << 'EOF'\n#!/bin/bash\nwhile true; do\n  sleep 0.5\n  echo \"Processing...\" >> /tmp/output.log\n  ls -la /tmp > /dev/null\ndone\nEOF",
+        "chmod +x slow-app.sh",
+        "./slow-app.sh &",
+        "PID=$!",
+        "# Trace system calls",
+        "strace -p $PID -c",
+        "# Trace with timestamps",
+        "strace -p $PID -tt -T",
+        "# Filter specific syscalls",
+        "strace -p $PID -e trace=open,read,write"
+      ],
+      "codeExample": "# debug-slow-process.sh\n#!/bin/bash\n\nif [ -z \"$1\" ]; then\n    echo \"Usage: $0 <pid>\"\n    exit 1\nfi\n\nPID=$1\n\necho \"=== Debugging Process $PID ===\"\necho \"\"\n\n# Process info\necho \"Process Information:\"\nps -p $PID -o pid,ppid,cmd,%mem,%cpu,etime\necho \"\"\n\n# System call summary\necho \"System Call Summary (10 seconds):\"\necho \"Tracing... (this will take 10 seconds)\"\ntimeout 10 strace -p $PID -c 2>&1 | tail -20\necho \"\"\n\n# Open files\necho \"Open File Descriptors:\"\nlsof -p $PID | head -20\necho \"\"\n\n# Thread count\necho \"Thread Count:\"\nps -L -p $PID | wc -l\necho \"\"\n\n# Network connections\necho \"Network Connections:\"\nss -tunap | grep \"pid=$PID\"",
+      "expectedOutput": "Identify slow system calls and I/O operations",
+      "validationCriteria": [
+        "Can run strace on a process",
+        "Understand strace output",
+        "Identify slow operations"
+      ],
+      "hints": [
+        "Look for calls with high time percentage",
+        "ENOENT errors indicate missing files",
+        "Use -e trace=file for file operations only"
+      ]
+    },
+    {
+      "id": "optimization-tuning",
+      "title": "System Optimization and Tuning",
+      "description": "Apply performance optimizations based on findings.",
+      "codeExample": "# system-tuning.sh\n#!/bin/bash\n\necho \"=== System Performance Tuning ===\"\necho \"\"\n\n# Backup current settings\ncp /etc/sysctl.conf /etc/sysctl.conf.backup\n\n# Network optimizations\ncat >> /etc/sysctl.conf << 'EOF'\n\n# Network Performance Tuning\nnet.core.rmem_max = 134217728\nnet.core.wmem_max = 134217728\nnet.ipv4.tcp_rmem = 4096 87380 67108864\nnet.ipv4.tcp_wmem = 4096 65536 67108864\nnet.ipv4.tcp_congestion_control = bbr\nnet.core.default_qdisc = fq\n\n# Increase max connections\nnet.core.somaxconn = 4096\nnet.ipv4.tcp_max_syn_backlog = 8192\n\n# Fast connection recycling\nnet.ipv4.tcp_tw_reuse = 1\nnet.ipv4.tcp_fin_timeout = 15\n\n# File descriptors\nfs.file-max = 2097152\n\n# Swap behavior (reduce swap usage)\nvm.swappiness = 10\nvm.dirty_ratio = 15\nvm.dirty_background_ratio = 5\nEOF\n\necho \"Tuning parameters added to /etc/sysctl.conf\"\necho \"Apply with: sysctl -p\"\necho \"\"\n\n# Process limits\ncat >> /etc/security/limits.conf << 'EOF'\n* soft nofile 65536\n* hard nofile 65536\n* soft nproc 65536\n* hard nproc 65536\nEOF\n\necho \"Process limits updated in /etc/security/limits.conf\"\necho \"\"\n\n# Create monitoring cron job\ncat > /etc/cron.d/system-monitor << 'EOF'\n*/5 * * * * root /usr/local/bin/system-health-check.sh\nEOF\n\necho \"Monitoring cron job created\"\necho \"\"\necho \"System tuning complete!\"",
+      "commands": [
+        "# Apply network optimizations",
+        "sysctl -w net.core.somaxconn=4096",
+        "sysctl -w net.ipv4.tcp_tw_reuse=1",
+        "# Adjust swap behavior",
+        "sysctl -w vm.swappiness=10",
+        "# Increase file descriptor limit",
+        "ulimit -n 65536",
+        "# Verify changes",
+        "sysctl -a | grep -E '(somaxconn|swappiness|file-max)'"
+      ],
+      "expectedOutput": "Optimized system parameters for better performance",
+      "validationCriteria": [
+        "Kernel parameters are tuned",
+        "File descriptor limits increased",
+        "Swap behavior optimized"
+      ],
+      "hints": [
+        "Test one change at a time",
+        "Monitor impact of each tuning",
+        "Document all changes made"
+      ]
+    }
+  ],
+  "completionCriteria": [
+    "Can identify CPU bottlenecks using monitoring tools",
+    "Understand memory usage and swap behavior",
+    "Successfully diagnose I/O performance issues",
+    "Use strace to debug application issues",
+    "Apply system-level performance optimizations"
+  ],
+  "resources": [
+    {
+      "title": "Linux Performance Tools",
+      "url": "https://www.brendangregg.com/linuxperf.html",
+      "type": "reference",
+      "external": true
+    },
+    {
+      "title": "strace Tutorial",
+      "url": "https://man7.org/linux/man-pages/man1/strace.1.html",
+      "type": "documentation",
+      "external": true
+    },
+    {
+      "title": "Linux Performance Analysis in 60 Seconds",
+      "url": "https://netflixtechblog.com/linux-performance-analysis-in-60-000-milliseconds-accc10403c55",
+      "type": "tutorial",
+      "external": true
+    }
+  ],
+  "troubleshooting": [
+    {
+      "issue": "Cannot run iotop or see per-process I/O",
+      "solution": "iotop requires root privileges. Run with sudo or as root user."
+    },
+    {
+      "issue": "strace permission denied",
+      "solution": "Either run as root or set ptrace_scope: sysctl -w kernel.yama.ptrace_scope=0"
+    },
+    {
+      "issue": "Tools not found in container",
+      "solution": "Install missing tools: apt-get update && apt-get install -y <tool-name>"
+    },
+    {
+      "issue": "High load but low CPU usage",
+      "solution": "Check I/O wait time with iostat. High iowait indicates disk bottleneck, not CPU."
+    }
+  ],
+  "featured": true
+}

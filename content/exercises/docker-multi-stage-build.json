@@ -1,0 +1,139 @@
+{
+  "id": "docker-multi-stage-build",
+  "title": "Docker Multi-Stage Build Optimization",
+  "description": "Learn to create efficient Docker images using multi-stage builds to reduce image size and improve security.",
+  "category": {
+    "name": "Docker",
+    "slug": "docker"
+  },
+  "difficulty": "intermediate",
+  "estimatedTime": "60 minutes",
+  "technologies": ["Docker", "Node.js", "Alpine Linux"],
+  "prerequisites": ["Basic Docker knowledge", "Understanding of Dockerfile syntax"],
+  "learningObjectives": [
+    "Understand multi-stage build concepts",
+    "Reduce Docker image size by 70%+",
+    "Implement security best practices",
+    "Optimize build caching"
+  ],
+  "environment": "local",
+  "icon": "Container",
+  "publishedAt": "2024-12-01T10:00:00Z",
+  "author": {
+    "name": "DevOps Daily Team",
+    "slug": "devops-daily-team"
+  },
+  "tags": ["Docker", "Optimization", "Security", "Best Practices"],
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Project Setup",
+      "description": "Create a sample Node.js application for containerization.",
+      "commands": [
+        "mkdir docker-optimization-lab",
+        "cd docker-optimization-lab",
+        "npm init -y",
+        "npm install express"
+      ],
+      "codeExample": "// app.js\nconst express = require('express');\nconst app = express();\nconst port = 3000;\n\napp.get('/', (req, res) => {\n  res.json({ message: 'Hello from optimized container!' });\n});\n\napp.listen(port, () => {\n  console.log(`Server running on port ${port}`);\n});",
+      "hints": ["Create a simple Express server", "Keep dependencies minimal for this exercise"]
+    },
+    {
+      "id": "basic-dockerfile",
+      "title": "Create Basic Dockerfile",
+      "description": "Start with a simple, unoptimized Dockerfile to establish baseline.",
+      "codeExample": "# Dockerfile.basic\nFROM node:16\nWORKDIR /app\nCOPY . .\nRUN npm install\nEXPOSE 3000\nCMD [\"node\", \"app.js\"]",
+      "commands": ["docker build -f Dockerfile.basic -t app:basic .", "docker images app:basic"],
+      "expectedOutput": "Image size should be around 900MB+",
+      "validationCriteria": [
+        "Docker image builds successfully",
+        "Image size is recorded for comparison"
+      ]
+    },
+    {
+      "id": "multi-stage-dockerfile",
+      "title": "Implement Multi-Stage Build",
+      "description": "Create an optimized Dockerfile using multi-stage builds.",
+      "codeExample": "# Dockerfile.optimized\n# Build stage\nFROM node:16-alpine AS builder\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --only=production\n\n# Production stage\nFROM node:16-alpine AS production\nRUN addgroup -g 1001 -S nodejs\nRUN adduser -S nextjs -u 1001\nWORKDIR /app\nCOPY --from=builder /app/node_modules ./node_modules\nCOPY --chown=nextjs:nodejs . .\nUSER nextjs\nEXPOSE 3000\nCMD [\"node\", \"app.js\"]",
+      "commands": [
+        "docker build -f Dockerfile.optimized -t app:optimized .",
+        "docker images | grep app"
+      ],
+      "expectedOutput": "Optimized image should be 70-80% smaller",
+      "validationCriteria": [
+        "Multi-stage build completes successfully",
+        "Final image size is significantly reduced",
+        "Application runs with non-root user"
+      ]
+    },
+    {
+      "id": "security-scan",
+      "title": "Security Analysis",
+      "description": "Scan both images for vulnerabilities and compare results.",
+      "commands": [
+        "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy app:basic",
+        "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy app:optimized"
+      ],
+      "hints": ["Install Trivy if not available", "Compare vulnerability counts between images"],
+      "validationCriteria": ["Security scan completes", "Vulnerability comparison documented"]
+    },
+    {
+      "id": "production-optimization",
+      "title": "Production-Ready Optimization",
+      "description": "Implement advanced optimization techniques including distroless images, build caching, and health checks.",
+      "codeExample": "# Dockerfile.production\n# Build stage\nFROM node:16-alpine AS dependencies\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --only=production && npm cache clean --force\n\n# Build stage\nFROM node:16-alpine AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build 2>/dev/null || echo \"No build script found\"\n\n# Production stage with distroless\nFROM gcr.io/distroless/nodejs16-debian11 AS production\nWORKDIR /app\nCOPY --from=dependencies /app/node_modules ./node_modules\nCOPY --from=build /app/app.js ./\nCOPY --from=build /app/package.json ./\nUSER 1001\nEXPOSE 3000\nHEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\\n  CMD [\"node\", \"-e\", \"require('http').get('http://localhost:3000/', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\"]\nCMD [\"app.js\"]\n\n# .dockerignore\nnode_modules\nnpm-debug.log\nDockerfile*\n.dockerignore\n.git\n.gitignore\nREADME.md\n.env\n.nyc_output\ncoverage\n.cache",
+      "commands": [
+        "docker build -f Dockerfile.production -t app:production .",
+        "docker images | grep app",
+        "docker run -d --name app-prod -p 3001:3000 app:production",
+        "sleep 5",
+        "docker inspect --format='{{.State.Health.Status}}' app-prod",
+        "curl http://localhost:3001",
+        "docker stop app-prod && docker rm app-prod"
+      ],
+      "validationCriteria": [
+        "Distroless image builds successfully",
+        "Image size is minimal (under 50MB)",
+        "Health check passes",
+        "Application runs as non-root user",
+        "Build cache is optimized"
+      ],
+      "expectedOutput": "Ultra-minimal production image with advanced security and optimization features",
+      "hints": [
+        "Distroless images contain only your application and runtime dependencies",
+        "Use .dockerignore to exclude unnecessary files",
+        "Layer caching improves build performance"
+      ]
+    }
+  ],
+  "completionCriteria": [
+    "Both Docker images build successfully",
+    "Optimized image is at least 50% smaller",
+    "Security scan shows improvement",
+    "Application runs correctly in both containers"
+  ],
+  "resources": [
+    {
+      "title": "Docker Multi-Stage Builds Documentation",
+      "url": "https://docs.docker.com/develop/dev-best-practices/dockerfile_best-practices/",
+      "type": "documentation",
+      "external": true
+    },
+    {
+      "title": "Docker Security Best Practices",
+      "url": "/posts/docker-security-best-practices",
+      "type": "tutorial"
+    }
+  ],
+  "troubleshooting": [
+    {
+      "issue": "Build fails at npm install stage",
+      "solution": "Ensure package.json exists and contains valid dependencies"
+    },
+    {
+      "issue": "Permission denied errors",
+      "solution": "Check file permissions and user configuration in Dockerfile"
+    }
+  ],
+  "featured": true
+}

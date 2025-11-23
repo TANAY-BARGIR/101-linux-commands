@@ -1,0 +1,127 @@
+{
+  "id": "docker-quiz",
+  "title": "Docker Fundamentals Quiz",
+  "description": "Test your knowledge of Docker containers, images, and orchestration concepts",
+  "category": "Docker",
+  "icon": "Code",
+  "totalPoints": 85,
+  "theme": {
+    "primaryColor": "blue",
+    "gradientFrom": "from-blue-500",
+    "gradientTo": "to-cyan-600"
+  },
+  "metadata": {
+    "estimatedTime": "12-15 minutes",
+    "difficultyLevels": {
+      "beginner": 3,
+      "intermediate": 2,
+      "advanced": 1
+    }
+  },
+  "questions": [
+    {
+      "id": "dockerfile-basics",
+      "title": "Dockerfile Best Practices",
+      "description": "Choose the most efficient Dockerfile for a Node.js application.",
+      "situation": "You need to create a Dockerfile for a Node.js web application that has dependencies in package.json.",
+      "codeExample": "// Your app structure:\n├── package.json\n├── package-lock.json\n├── src/\n│   └── app.js\n└── public/\n    └── index.html",
+      "options": [
+        "FROM node:16-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --only=production\nCOPY . .\nEXPOSE 3000\nCMD [\"npm\", \"start\"]",
+        "FROM node:16\nCOPY . /app\nWORKDIR /app\nRUN npm install\nEXPOSE 3000\nCMD [\"npm\", \"start\"]",
+        "FROM node:16\nWORKDIR /app\nCOPY . .\nRUN npm install\nCMD [\"node\", \"src/app.js\"]",
+        "FROM ubuntu\nRUN apt-get update && apt-get install -y nodejs npm\nCOPY . /app\nWORKDIR /app\nRUN npm install\nCMD [\"npm\", \"start\"]"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Option B uses Alpine for smaller image size, leverages Docker layer caching by copying package files first, uses npm ci for production builds, and follows proper WORKDIR practices.",
+      "hint": "Consider image size, layer caching, and production best practices. Which approach optimizes for both build speed and security?",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "container-networking",
+      "title": "Docker Networking",
+      "description": "How should two containers communicate in a multi-container application?",
+      "situation": "You have a web application container that needs to connect to a PostgreSQL database container.",
+      "options": [
+        "Use --link flag when running containers",
+        "Use localhost and map ports to host",
+        "Create a custom bridge network and connect both containers to it",
+        "Connect containers using IP addresses"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Custom bridge networks provide better isolation, automatic DNS resolution between containers, and are the recommended approach for multi-container applications.",
+      "hint": "Think about modern Docker networking practices. What's the current recommended way to connect containers?",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "volume-management",
+      "title": "Data Persistence",
+      "description": "What's the best way to persist database data in a containerized PostgreSQL?",
+      "situation": "You're running PostgreSQL in a container and need to ensure data persists across container restarts and updates.",
+      "options": [
+        "Use bind mounts to map host directory",
+        "Copy data files during container build",
+        "Use --volumes-from another container",
+        "Create a named volume and mount it to /var/lib/postgresql/data"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Named volumes are managed by Docker, provide better performance, work across different host systems, and are the recommended way to persist database data.",
+      "hint": "Consider portability, performance, and Docker's management capabilities. What's the most robust solution?",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "multi-stage-builds",
+      "title": "Optimizing Image Size",
+      "description": "You need to build a Go application with minimal final image size.",
+      "situation": "Your Go application needs to be compiled, but you don't want build tools in the final production image.",
+      "codeExample": "// You have:\n- main.go (your application)\n- go.mod and go.sum (dependencies)\n- Need: minimal production image",
+      "options": [
+        "FROM golang:1.19\nCOPY . /app\nWORKDIR /app\nRUN go build -o myapp\nCMD [\"./myapp\"]",
+        "FROM golang:1.19 AS builder\nWORKDIR /app\nCOPY go.* ./\nRUN go mod download\nCOPY . .\nRUN go build -o myapp\n\nFROM alpine:latest\nRUN apk --no-cache add ca-certificates\nCOPY --from=builder /app/myapp /\nCMD [\"/myapp\"]",
+        "FROM alpine:latest\nRUN apk add --no-cache go\nCOPY . /app\nWORKDIR /app\nRUN go build -o myapp\nCMD [\"./myapp\"]",
+        "FROM scratch\nCOPY main.go /\nCMD [\"go\", \"run\", \"main.go\"]"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Multi-stage builds allow you to use a full build environment in the first stage, then copy only the compiled binary to a minimal final image, significantly reducing size.",
+      "hint": "Think about separating the build environment from the runtime environment. How can you get the benefits of both?",
+      "difficulty": "intermediate",
+      "points": 15
+    },
+    {
+      "id": "health-checks",
+      "title": "Container Health Monitoring",
+      "description": "How do you properly implement health checks for a web application container?",
+      "situation": "Your web application runs on port 3000 and has a /health endpoint that returns HTTP 200 when healthy.",
+      "options": [
+        "HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD curl -f http://localhost:3000/health || exit 1",
+        "RUN curl -f http://localhost:3000/health",
+        "HEALTHCHECK CMD ps aux | grep node",
+        "No health check needed - Docker handles this automatically"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The HEALTHCHECK instruction with proper interval, timeout, and retry settings using the application's health endpoint is the correct approach for monitoring container health.",
+      "hint": "Consider what makes a container truly healthy - is it just running, or actually serving requests correctly?",
+      "difficulty": "intermediate",
+      "points": 13
+    },
+    {
+      "id": "security-practices",
+      "title": "Container Security",
+      "description": "What's the most important security practice when building production Docker images?",
+      "situation": "You're preparing a Docker image for production deployment and need to follow security best practices.",
+      "options": [
+        "Always run as root user for maximum compatibility",
+        "Create and use a non-root user, avoid unnecessary packages, and use specific image tags",
+        "Use the latest tag for all base images to get updates",
+        "Install all possible dependencies to avoid runtime issues"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Running as non-root, minimizing attack surface by avoiding unnecessary packages, and using specific tags (not 'latest') are fundamental Docker security practices.",
+      "hint": "Think about the principle of least privilege and minimizing the attack surface. What practices reduce security risks?",
+      "difficulty": "advanced",
+      "points": 25
+    }
+  ]
+}

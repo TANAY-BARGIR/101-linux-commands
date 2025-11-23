@@ -1,0 +1,238 @@
+{
+  "id": "nginx-load-balancing-reverse-proxy",
+  "title": "Nginx Load Balancing and Reverse Proxy",
+  "description": "Master load balancing and reverse proxy patterns with Nginx to build resilient, scalable infrastructure.",
+  "category": {
+    "name": "Infrastructure",
+    "slug": "infrastructure"
+  },
+  "difficulty": "intermediate",
+  "estimatedTime": "75 minutes",
+  "technologies": ["Nginx", "Docker", "Node.js", "Load Balancing"],
+  "prerequisites": ["Basic networking knowledge", "Docker fundamentals", "Command line proficiency"],
+  "learningObjectives": [
+    "Configure Nginx as a reverse proxy",
+    "Implement load balancing strategies",
+    "Set up health checks and failover",
+    "Optimize for production workloads"
+  ],
+  "environment": "local",
+  "icon": "Server",
+  "publishedAt": "2025-11-19T10:00:00Z",
+  "author": {
+    "name": "DevOps Daily Team",
+    "slug": "devops-daily-team"
+  },
+  "tags": ["Nginx", "Load Balancing", "Reverse Proxy", "High Availability", "Networking"],
+  "steps": [
+    {
+      "id": "setup-backend-services",
+      "title": "Create Multiple Backend Services",
+      "description": "Set up three identical backend services that will demonstrate load balancing behavior.",
+      "commands": [
+        "mkdir nginx-load-balancing-lab",
+        "cd nginx-load-balancing-lab",
+        "npm init -y",
+        "npm install express"
+      ],
+      "codeExample": "// server.js\nconst express = require('express');\nconst os = require('os');\nconst app = express();\nconst port = process.env.PORT || 3000;\nconst serverName = process.env.SERVER_NAME || 'unknown';\n\n// Request counter for this instance\nlet requestCount = 0;\n\napp.get('/', (req, res) => {\n  requestCount++;\n  res.json({\n    server: serverName,\n    hostname: os.hostname(),\n    port: port,\n    requests: requestCount,\n    timestamp: new Date().toISOString(),\n    message: `Hello from ${serverName}!`\n  });\n});\n\napp.get('/health', (req, res) => {\n  res.json({ status: 'healthy', server: serverName });\n});\n\napp.get('/slow', (req, res) => {\n  setTimeout(() => {\n    res.json({ server: serverName, message: 'Slow response' });\n  }, 2000);\n});\n\napp.listen(port, '0.0.0.0', () => {\n  console.log(`${serverName} running on port ${port}`);\n});",
+      "hints": [
+        "Each server will identify itself by name",
+        "The request counter helps visualize load distribution"
+      ],
+      "validationCriteria": [
+        "Node.js application is created",
+        "Server responds with identification info"
+      ]
+    },
+    {
+      "id": "docker-compose-setup",
+      "title": "Containerize Backend Services",
+      "description": "Create a Docker Compose setup with three backend instances.",
+      "codeExample": "# Dockerfile\nFROM node:18-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --only=production\nCOPY server.js .\nEXPOSE 3000\nCMD [\"node\", \"server.js\"]\n\n# docker-compose.yml\nversion: '3.8'\n\nservices:\n  backend1:\n    build: .\n    environment:\n      - SERVER_NAME=backend-1\n      - PORT=3000\n    ports:\n      - \"3001:3000\"\n    networks:\n      - app-network\n\n  backend2:\n    build: .\n    environment:\n      - SERVER_NAME=backend-2\n      - PORT=3000\n    ports:\n      - \"3002:3000\"\n    networks:\n      - app-network\n\n  backend3:\n    build: .\n    environment:\n      - SERVER_NAME=backend-3\n      - PORT=3000\n    ports:\n      - \"3003:3000\"\n    networks:\n      - app-network\n\nnetworks:\n  app-network:\n    driver: bridge",
+      "commands": [
+        "docker-compose up -d",
+        "docker-compose ps",
+        "curl http://localhost:3001",
+        "curl http://localhost:3002",
+        "curl http://localhost:3003"
+      ],
+      "expectedOutput": "Three backend services running on ports 3001, 3002, 3003",
+      "validationCriteria": [
+        "All three containers are running",
+        "Each service responds with unique server name",
+        "Services are on the same network"
+      ],
+      "hints": [
+        "Each service runs on the same internal port (3000)",
+        "External ports differ for testing purposes"
+      ]
+    },
+    {
+      "id": "basic-reverse-proxy",
+      "title": "Configure Basic Reverse Proxy",
+      "description": "Set up Nginx as a reverse proxy to forward requests to a single backend.",
+      "codeExample": "# nginx/nginx.conf\nevents {\n    worker_connections 1024;\n}\n\nhttp {\n    # Logging\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    # Basic reverse proxy\n    upstream backend {\n        server backend1:3000;\n    }\n\n    server {\n        listen 80;\n        server_name localhost;\n\n        location / {\n            proxy_pass http://backend;\n            proxy_set_header Host $host;\n            proxy_set_header X-Real-IP $remote_addr;\n            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n            proxy_set_header X-Forwarded-Proto $scheme;\n        }\n\n        location /health {\n            proxy_pass http://backend/health;\n        }\n    }\n}",
+      "commands": [
+        "mkdir nginx",
+        "# Create nginx.conf as shown above",
+        "# Update docker-compose.yml to add nginx service"
+      ],
+      "hints": [
+        "The upstream block defines backend servers",
+        "proxy_set_header preserves client information"
+      ],
+      "validationCriteria": [
+        "Nginx configuration is valid",
+        "Requests to port 80 reach backend1"
+      ]
+    },
+    {
+      "id": "implement-load-balancing",
+      "title": "Implement Load Balancing",
+      "description": "Configure Nginx to distribute traffic across all three backend servers using round-robin.",
+      "codeExample": "# nginx/nginx.conf (updated)\nevents {\n    worker_connections 1024;\n}\n\nhttp {\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    # Load balancing configuration\n    upstream backend {\n        # Round-robin load balancing (default)\n        server backend1:3000;\n        server backend2:3000;\n        server backend3:3000;\n    }\n\n    server {\n        listen 80;\n        server_name localhost;\n\n        location / {\n            proxy_pass http://backend;\n            proxy_set_header Host $host;\n            proxy_set_header X-Real-IP $remote_addr;\n            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n            proxy_set_header X-Forwarded-Proto $scheme;\n            \n            # Connection settings\n            proxy_connect_timeout 5s;\n            proxy_send_timeout 10s;\n            proxy_read_timeout 10s;\n        }\n\n        location /health {\n            proxy_pass http://backend/health;\n        }\n    }\n}\n\n# docker-compose.yml (add nginx service)\nservices:\n  # ... existing backend services ...\n\n  nginx:\n    image: nginx:alpine\n    volumes:\n      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro\n    ports:\n      - \"80:80\"\n    depends_on:\n      - backend1\n      - backend2\n      - backend3\n    networks:\n      - app-network",
+      "commands": [
+        "docker-compose down",
+        "docker-compose up -d",
+        "# Test load balancing",
+        "for i in {1..9}; do curl -s http://localhost | jq -r '.server'; done"
+      ],
+      "expectedOutput": "Requests distributed evenly: backend-1, backend-2, backend-3 pattern",
+      "validationCriteria": [
+        "All three backends receive requests",
+        "Distribution follows round-robin pattern",
+        "No connection errors occur"
+      ],
+      "hints": [
+        "Watch the 'server' field in responses",
+        "Round-robin is Nginx's default algorithm"
+      ]
+    },
+    {
+      "id": "health-checks-failover",
+      "title": "Add Health Checks and Failover",
+      "description": "Configure active health checks and automatic failover when backends become unhealthy.",
+      "codeExample": "# nginx/nginx.conf (with health checks)\nevents {\n    worker_connections 1024;\n}\n\nhttp {\n    access_log /var/log/nginx/access.log;\n    error_log /var/log/nginx/error.log;\n\n    # Upstream with health checks\n    upstream backend {\n        server backend1:3000 max_fails=3 fail_timeout=30s;\n        server backend2:3000 max_fails=3 fail_timeout=30s;\n        server backend3:3000 max_fails=3 fail_timeout=30s;\n        \n        # Keep connections alive\n        keepalive 32;\n    }\n\n    server {\n        listen 80;\n        server_name localhost;\n\n        location / {\n            proxy_pass http://backend;\n            proxy_set_header Host $host;\n            proxy_set_header X-Real-IP $remote_addr;\n            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n            proxy_set_header X-Forwarded-Proto $scheme;\n            proxy_set_header Connection \"\";\n            proxy_http_version 1.1;\n            \n            # Timeouts\n            proxy_connect_timeout 5s;\n            proxy_send_timeout 10s;\n            proxy_read_timeout 10s;\n            \n            # Retry logic\n            proxy_next_upstream error timeout http_502 http_503 http_504;\n            proxy_next_upstream_tries 2;\n        }\n\n        location /health {\n            proxy_pass http://backend/health;\n        }\n        \n        # Nginx status endpoint\n        location /nginx-status {\n            stub_status on;\n            access_log off;\n        }\n    }\n}",
+      "commands": [
+        "docker-compose restart nginx",
+        "# Test normal operation",
+        "for i in {1..6}; do curl -s http://localhost | jq -r '.server'; done",
+        "# Simulate failure",
+        "docker-compose stop backend2",
+        "# Test failover",
+        "for i in {1..6}; do curl -s http://localhost | jq -r '.server'; done",
+        "# Restore service",
+        "docker-compose start backend2"
+      ],
+      "expectedOutput": "Traffic automatically routes around failed backend",
+      "validationCriteria": [
+        "Requests succeed even when one backend is down",
+        "Traffic redistributes to healthy backends",
+        "Failed backend recovers after restart"
+      ],
+      "hints": [
+        "max_fails defines failure threshold",
+        "fail_timeout sets recovery wait period",
+        "proxy_next_upstream enables automatic retry"
+      ]
+    },
+    {
+      "id": "advanced-strategies",
+      "title": "Explore Load Balancing Strategies",
+      "description": "Test different load balancing algorithms: least connections and IP hash.",
+      "codeExample": "# Least Connections Strategy\n# nginx/nginx-least-conn.conf\nupstream backend {\n    least_conn;  # Route to server with fewest active connections\n    server backend1:3000;\n    server backend2:3000;\n    server backend3:3000;\n}\n\n# IP Hash Strategy (sticky sessions)\n# nginx/nginx-ip-hash.conf\nupstream backend {\n    ip_hash;  # Same client always goes to same server\n    server backend1:3000;\n    server backend2:3000;\n    server backend3:3000;\n}\n\n# Weighted Load Balancing\n# nginx/nginx-weighted.conf\nupstream backend {\n    server backend1:3000 weight=3;  # Gets 3x more requests\n    server backend2:3000 weight=2;  # Gets 2x more requests\n    server backend3:3000 weight=1;  # Gets 1x requests\n}",
+      "commands": [
+        "# Test least_conn algorithm",
+        "# Update nginx.conf and restart",
+        "docker-compose restart nginx",
+        "# Simulate concurrent requests",
+        "for i in {1..20}; do curl -s http://localhost/slow & done; wait",
+        "# Check distribution",
+        "docker-compose logs --tail=50 backend1 backend2 backend3 | grep 'Slow response'"
+      ],
+      "expectedOutput": "Different algorithms produce different distribution patterns",
+      "validationCriteria": [
+        "Least connections routes to less busy servers",
+        "IP hash maintains session consistency",
+        "Weighted balancing respects weight ratios"
+      ],
+      "hints": [
+        "least_conn is better for long-lived connections",
+        "ip_hash enables session persistence",
+        "Weighted balancing suits heterogeneous hardware"
+      ]
+    },
+    {
+      "id": "monitoring-optimization",
+      "title": "Monitoring and Performance Tuning",
+      "description": "Add monitoring and optimize Nginx for production performance.",
+      "codeExample": "# Complete production-ready configuration\n# nginx/nginx.conf\nuser nginx;\nworker_processes auto;\nworker_rlimit_nofile 65535;\n\nevents {\n    worker_connections 4096;\n    use epoll;\n    multi_accept on;\n}\n\nhttp {\n    # Performance optimizations\n    sendfile on;\n    tcp_nopush on;\n    tcp_nodelay on;\n    keepalive_timeout 65;\n    keepalive_requests 100;\n    \n    # Compression\n    gzip on;\n    gzip_vary on;\n    gzip_comp_level 6;\n    gzip_types text/plain text/css application/json application/javascript;\n    \n    # Logging\n    log_format detailed '$remote_addr - $remote_user [$time_local] '\n                       '\"$request\" $status $body_bytes_sent '\n                       '\"$http_referer\" \"$http_user_agent\" '\n                       'rt=$request_time uct=\"$upstream_connect_time\" '\n                       'uht=\"$upstream_header_time\" urt=\"$upstream_response_time\"';\n    \n    access_log /var/log/nginx/access.log detailed;\n    error_log /var/log/nginx/error.log warn;\n    \n    # Rate limiting\n    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;\n    \n    upstream backend {\n        least_conn;\n        server backend1:3000 max_fails=3 fail_timeout=30s;\n        server backend2:3000 max_fails=3 fail_timeout=30s;\n        server backend3:3000 max_fails=3 fail_timeout=30s;\n        keepalive 32;\n    }\n\n    server {\n        listen 80;\n        server_name localhost;\n        \n        # Rate limiting\n        location / {\n            limit_req zone=api_limit burst=20 nodelay;\n            \n            proxy_pass http://backend;\n            proxy_set_header Host $host;\n            proxy_set_header X-Real-IP $remote_addr;\n            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n            proxy_set_header X-Forwarded-Proto $scheme;\n            proxy_set_header Connection \"\";\n            proxy_http_version 1.1;\n            \n            proxy_connect_timeout 5s;\n            proxy_send_timeout 10s;\n            proxy_read_timeout 10s;\n            \n            proxy_next_upstream error timeout http_502 http_503 http_504;\n            proxy_next_upstream_tries 2;\n            \n            # Caching headers\n            add_header X-Cache-Status $upstream_cache_status;\n        }\n        \n        location /nginx-status {\n            stub_status on;\n            access_log off;\n        }\n    }\n}\n\n# Simple load test script\n# test-load.sh\n#!/bin/bash\necho \"Running load test...\"\nfor i in {1..100}; do\n  curl -s -o /dev/null -w \"%{http_code} %{time_total}s\\n\" http://localhost/ &\ndone\nwait\necho \"\\nChecking backend distribution:\"\ncurl -s http://localhost:3001 | jq '.requests'\ncurl -s http://localhost:3002 | jq '.requests'\ncurl -s http://localhost:3003 | jq '.requests'",
+      "commands": [
+        "chmod +x test-load.sh",
+        "./test-load.sh",
+        "curl http://localhost/nginx-status",
+        "docker-compose logs nginx | tail -20"
+      ],
+      "expectedOutput": "Nginx handles load efficiently with optimized configuration",
+      "validationCriteria": [
+        "Load test completes successfully",
+        "Response times are consistent",
+        "Request distribution is balanced",
+        "No errors in nginx logs"
+      ],
+      "hints": [
+        "worker_processes auto adapts to CPU cores",
+        "gzip reduces bandwidth usage",
+        "Rate limiting prevents abuse",
+        "stub_status provides real-time metrics"
+      ]
+    }
+  ],
+  "completionCriteria": [
+    "Multiple backend services are deployed",
+    "Nginx successfully load balances traffic",
+    "Health checks and failover work correctly",
+    "Different load balancing strategies are tested",
+    "Production optimizations are implemented"
+  ],
+  "resources": [
+    {
+      "title": "Nginx Load Balancing Documentation",
+      "url": "https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/",
+      "type": "documentation",
+      "external": true
+    },
+    {
+      "title": "Nginx Reverse Proxy Guide",
+      "url": "https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/",
+      "type": "documentation",
+      "external": true
+    },
+    {
+      "title": "High Performance Nginx",
+      "url": "https://www.nginx.com/blog/tuning-nginx/",
+      "type": "tutorial",
+      "external": true
+    }
+  ],
+  "troubleshooting": [
+    {
+      "issue": "Connection refused errors to backends",
+      "solution": "Verify all backend services are running with 'docker-compose ps' and check network connectivity"
+    },
+    {
+      "issue": "Nginx fails to reload configuration",
+      "solution": "Test configuration syntax with 'docker-compose exec nginx nginx -t' before reloading"
+    },
+    {
+      "issue": "Uneven load distribution",
+      "solution": "Check for connection keep-alive settings and verify no sticky session mechanisms are active"
+    },
+    {
+      "issue": "502 Bad Gateway errors",
+      "solution": "Increase proxy timeouts and check backend service logs for application errors"
+    }
+  ],
+  "featured": true
+}

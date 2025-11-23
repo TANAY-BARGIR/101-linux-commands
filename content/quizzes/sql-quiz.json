@@ -1,0 +1,221 @@
+{
+  "id": "sql-quiz",
+  "title": "SQL & Database Design Quiz",
+  "description": "Master database design and SQL through real business scenarios covering queries, optimization, design patterns, and data modeling",
+  "category": "SQL",
+  "icon": "Database",
+  "totalPoints": 150,
+  "theme": {
+    "primaryColor": "blue",
+    "gradientFrom": "from-blue-600",
+    "gradientTo": "to-indigo-700"
+  },
+  "metadata": {
+    "estimatedTime": "25-30 minutes",
+    "difficultyLevels": {
+      "beginner": 4,
+      "intermediate": 5,
+      "advanced": 3
+    }
+  },
+  "questions": [
+    {
+      "id": "basic-joins-business",
+      "title": "Customer Order Analysis",
+      "description": "Find customers who placed orders but haven't received them yet.",
+      "situation": "Your e-commerce company needs to identify customers with pending orders for a customer service follow-up campaign.",
+      "codeExample": "Tables:\ncustomers: id, name, email, city\norders: id, customer_id, order_date, status, total_amount\n\nStatus values: 'pending', 'shipped', 'delivered', 'cancelled'\nGoal: Find customers with pending orders and their order details",
+      "options": [
+        "SELECT c.name, c.email, o.order_date, o.total_amount \nFROM customers c \nINNER JOIN orders o ON c.id = o.customer_id \nWHERE o.status = 'pending'",
+        "SELECT c.name, c.email FROM customers c, orders o WHERE c.id = o.customer_id AND o.status = 'pending'",
+        "SELECT c.name, c.email FROM customers c WHERE c.id IN (SELECT customer_id FROM orders WHERE status = 'pending')",
+        "SELECT * FROM customers WHERE id = (SELECT customer_id FROM orders WHERE status = 'pending')"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The INNER JOIN with explicit ON clause is clear and efficient, and includes relevant order details (date and amount) that would be useful for customer service follow-up. It's more readable than subqueries for this scenario.",
+      "hint": "Consider what information customer service would need and which JOIN syntax is most readable and efficient.",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "aggregation-business-metrics",
+      "title": "Sales Performance Analysis",
+      "description": "Calculate monthly sales metrics for business reporting.",
+      "situation": "Management needs a monthly sales report showing total revenue, number of orders, and average order value by month for the last year.",
+      "codeExample": "orders table: id, customer_id, order_date, total_amount, status\n\nNeed: Monthly breakdown with:\n- Total revenue\n- Order count\n- Average order value\n- Only completed orders (status = 'delivered')",
+      "options": [
+        "SELECT MONTH(order_date), SUM(total_amount), COUNT(*), AVG(total_amount) FROM orders WHERE status = 'delivered' GROUP BY MONTH(order_date)",
+        "SELECT SUM(total_amount), COUNT(id), AVG(total_amount) FROM orders WHERE order_date > '2023-01-01'",
+        "SELECT order_date, total_amount FROM orders WHERE status = 'delivered' ORDER BY order_date",
+        "SELECT \n  DATE_FORMAT(order_date, '%Y-%m') as month,\n  SUM(total_amount) as total_revenue,\n  COUNT(*) as order_count,\n  ROUND(AVG(total_amount), 2) as avg_order_value\nFROM orders \nWHERE status = 'delivered' \n  AND order_date >= DATE_SUB(NOW(), INTERVAL 1 YEAR)\nGROBY DATE_FORMAT(order_date, '%Y-%m')\nORDER BY month"
+      ],
+      "correctAnswer": 3,
+      "explanation": "This query properly groups by year-month, includes the last year filter, uses descriptive column aliases, rounds the average for readability, and orders results chronologically for reporting purposes.",
+      "hint": "Think about how management would want to see this data - what format and level of detail would be most useful for business decisions?",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "subquery-inventory-problem",
+      "title": "Inventory Management Challenge",
+      "description": "Find products that are running low on stock compared to their sales velocity.",
+      "situation": "Your inventory team needs to identify products where current stock is less than 3 times the average monthly sales, indicating potential stockouts.",
+      "codeExample": "Tables:\nproducts: id, name, current_stock, category\norder_items: order_id, product_id, quantity, price\norders: id, order_date, status\n\nGoal: Products where current_stock < (3 * avg_monthly_sales)",
+      "options": [
+        "SELECT p.name, p.current_stock FROM products p WHERE p.current_stock < (SELECT AVG(oi.quantity) FROM order_items oi WHERE oi.product_id = p.id)",
+        "SELECT p.name, p.current_stock,\n  (SELECT AVG(oi.quantity) * 3 FROM order_items oi \n   JOIN orders o ON oi.order_id = o.id \n   WHERE oi.product_id = p.id \n     AND o.order_date >= DATE_SUB(NOW(), INTERVAL 1 MONTH)\n     AND o.status = 'delivered') as monthly_avg_needed\nFROM products p\nWHERE p.current_stock < (\n  SELECT COALESCE(AVG(oi.quantity) * 3, 0) \n  FROM order_items oi \n  JOIN orders o ON oi.order_id = o.id \n  WHERE oi.product_id = p.id \n    AND o.order_date >= DATE_SUB(NOW(), INTERVAL 1 MONTH)\n    AND o.status = 'delivered'\n)",
+        "SELECT * FROM products WHERE current_stock < 100",
+        "SELECT p.name FROM products p, order_items oi WHERE p.id = oi.product_id AND p.current_stock < oi.quantity * 3"
+      ],
+      "correctAnswer": 1,
+      "explanation": "This query properly calculates monthly average sales using delivered orders from the last month, multiplies by 3 for the threshold, uses COALESCE to handle products with no recent sales, and provides useful output for inventory decisions.",
+      "hint": "Consider the time period for calculating averages, handling products with no recent sales, and what information inventory managers need to make decisions.",
+      "difficulty": "beginner",
+      "points": 14
+    },
+    {
+      "id": "window-functions-ranking",
+      "title": "Top Performers by Category",
+      "description": "Rank employees by sales performance within their department.",
+      "situation": "HR needs to identify the top 3 sales performers in each department for bonus allocation based on total sales in the last quarter.",
+      "codeExample": "Tables:\nemployees: id, name, department, hire_date\nsales: id, employee_id, sale_amount, sale_date, status\n\nGoal: Top 3 employees per department by Q4 sales total",
+      "options": [
+        "SELECT e.name, e.department, SUM(s.sale_amount) FROM employees e JOIN sales s ON e.id = s.employee_id GROUP BY e.department ORDER BY SUM(s.sale_amount) DESC LIMIT 3",
+        "SELECT e.name, e.department, MAX(s.sale_amount) FROM employees e, sales s WHERE e.id = s.employee_id GROUP BY e.department",
+        "SELECT DISTINCT e.department, e.name FROM employees e JOIN sales s ON e.id = s.employee_id ORDER BY s.sale_amount DESC",
+        "SELECT \n  name, \n  department, \n  total_sales,\n  dept_rank\nFROM (\n  SELECT \n    e.name,\n    e.department,\n    SUM(s.sale_amount) as total_sales,\n    ROW_NUMBER() OVER (PARTITION BY e.department ORDER BY SUM(s.sale_amount) DESC) as dept_rank\n  FROM employees e\n  JOIN sales s ON e.id = s.employee_id\n  WHERE s.sale_date >= DATE_SUB(NOW(), INTERVAL 3 MONTH)\n    AND s.status = 'completed'\n  GROUP BY e.id, e.name, e.department\n) ranked\nWHERE dept_rank <= 3"
+      ],
+      "correctAnswer": 3,
+      "explanation": "This query uses window functions to rank employees within each department (PARTITION BY), considers only the last quarter's completed sales, and limits to top 3 per department. It provides exactly what HR needs for bonus decisions.",
+      "hint": "You need ranking within groups (departments), not overall ranking. Which SQL feature allows ranking within partitions?",
+      "difficulty": "intermediate",
+      "points": 16
+    },
+    {
+      "id": "complex-join-customer-analysis",
+      "title": "Customer Lifecycle Analysis",
+      "description": "Analyze customer behavior across their entire purchase journey.",
+      "situation": "Marketing wants to understand customer lifecycle: first purchase date, total orders, total spent, last purchase date, and average days between orders for customers who made multiple purchases.",
+      "codeExample": "Tables:\ncustomers: id, name, email, registration_date\norders: id, customer_id, order_date, total_amount, status\n\nGoal: Comprehensive customer behavior metrics for multi-purchase customers",
+      "options": [
+        "SELECT c.name, COUNT(o.id), SUM(o.total_amount) FROM customers c JOIN orders o ON c.id = o.customer_id GROUP BY c.id",
+        "SELECT c.*, o.* FROM customers c, orders o WHERE c.id = o.customer_id AND o.status = 'delivered'",
+        "SELECT COUNT(*) FROM customers WHERE id IN (SELECT customer_id FROM orders GROUP BY customer_id HAVING COUNT(*) > 1)",
+        "SELECT \n  c.name,\n  c.email,\n  MIN(o.order_date) as first_purchase,\n  MAX(o.order_date) as last_purchase,\n  COUNT(o.id) as total_orders,\n  SUM(o.total_amount) as total_spent,\n  ROUND(AVG(o.total_amount), 2) as avg_order_value,\n  CASE \n    WHEN COUNT(o.id) > 1 THEN \n      ROUND(DATEDIFF(MAX(o.order_date), MIN(o.order_date)) / (COUNT(o.id) - 1), 1)\n    ELSE NULL \n  END as avg_days_between_orders\nFROM customers c\nJOIN orders o ON c.id = o.customer_id\nWHERE o.status = 'delivered'\nGROUP BY c.id, c.name, c.email\nHAVING COUNT(o.id) > 1\nORDER BY total_spent DESC"
+      ],
+      "correctAnswer": 3,
+      "explanation": "This comprehensive query calculates all requested metrics including the complex average days between orders calculation, filters for multi-purchase customers using HAVING, and provides actionable insights for marketing analysis.",
+      "hint": "Consider all the metrics requested, how to calculate time between purchases, and filtering for customers with multiple purchases.",
+      "difficulty": "intermediate",
+      "points": 18
+    },
+    {
+      "id": "database-design-ecommerce",
+      "title": "E-commerce Database Design",
+      "description": "Design tables for a product catalog with variants and pricing.",
+      "situation": "You're designing a database for an online clothing store. Products have multiple variants (size, color) with different prices and stock levels. You need to track inventory and support complex pricing rules.",
+      "codeExample": "Requirements:\n• Products (name, description, category, brand)\n• Variants (size, color, SKU, price, stock)\n• Categories can have subcategories\n• Price history for analytics\n• Efficient inventory queries",
+      "options": [
+        "CREATE TABLE products (\n  id INT PRIMARY KEY,\n  name VARCHAR(255),\n  description TEXT,\n  category VARCHAR(100),\n  size VARCHAR(10),\n  color VARCHAR(50),\n  price DECIMAL(10,2),\n  stock INT\n);",
+        "CREATE TABLE products (\n  id INT PRIMARY KEY,\n  name VARCHAR(255) NOT NULL,\n  description TEXT,\n  brand_id INT,\n  category_id INT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (brand_id) REFERENCES brands(id),\n  FOREIGN KEY (category_id) REFERENCES categories(id)\n);\n\nCREATE TABLE product_variants (\n  id INT PRIMARY KEY,\n  product_id INT NOT NULL,\n  sku VARCHAR(50) UNIQUE NOT NULL,\n  size VARCHAR(10),\n  color VARCHAR(50),\n  stock_quantity INT DEFAULT 0,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (product_id) REFERENCES products(id)\n);\n\nCREATE TABLE variant_prices (\n  id INT PRIMARY KEY,\n  variant_id INT NOT NULL,\n  price DECIMAL(10,2) NOT NULL,\n  effective_date DATE NOT NULL,\n  end_date DATE,\n  FOREIGN KEY (variant_id) REFERENCES product_variants(id)\n);",
+        "CREATE TABLE inventory (\n  product_name VARCHAR(255),\n  size VARCHAR(10),\n  color VARCHAR(50),\n  price DECIMAL(10,2),\n  quantity INT\n);",
+        "CREATE TABLE products (\n  id INT PRIMARY KEY,\n  product_json JSON\n);"
+      ],
+      "correctAnswer": 1,
+      "explanation": "This normalized design properly separates products from variants, supports price history, uses foreign keys for data integrity, includes necessary indexes, and allows for complex inventory and pricing queries while maintaining data consistency.",
+      "hint": "Consider normalization principles, data integrity, query performance, and future scalability. Which design best handles variants and pricing complexity?",
+      "difficulty": "intermediate",
+      "points": 15
+    },
+    {
+      "id": "query-optimization-performance",
+      "title": "Query Performance Optimization",
+      "description": "Optimize a slow-performing query that's causing production issues.",
+      "situation": "A customer search query is taking 15+ seconds and timing out. The query searches products by name, category, and price range. The products table has 2 million rows.",
+      "codeExample": "Current slow query:\nSELECT * FROM products \nWHERE (name LIKE '%shirt%' OR description LIKE '%shirt%') \n  AND category IN ('clothing', 'fashion') \n  AND price BETWEEN 20 AND 100\nORDER BY created_date DESC\nLIMIT 20;\n\nTable: products (2M rows, no indexes except primary key)",
+      "options": [
+        "Add ORDER BY created_date to speed up sorting",
+        "CREATE INDEX idx_search ON products(category, price, created_date);\n\nSELECT id, name, price, category, created_date \nFROM products \nWHERE category IN ('clothing', 'fashion')\n  AND price BETWEEN 20 AND 100\n  AND (name LIKE '%shirt%' OR description LIKE '%shirt%')\nORDER BY created_date DESC\nLIMIT 20;",
+        "CREATE FULLTEXT INDEX ft_products ON products(name, description);\nCREATE INDEX idx_category_price ON products(category, price);\nCREATE INDEX idx_created_date ON products(created_date);\n\nSELECT id, name, price, category, created_date \nFROM products \nWHERE MATCH(name, description) AGAINST('shirt' IN NATURAL LANGUAGE MODE)\n  AND category IN ('clothing', 'fashion')\n  AND price BETWEEN 20 AND 100\nORDER BY created_date DESC\nLIMIT 20;",
+        "SELECT * FROM products WHERE name = 'shirt' AND category = 'clothing' ORDER BY price"
+      ],
+      "correctAnswer": 2,
+      "explanation": "This solution uses FULLTEXT search for efficient text searching, creates a composite index for category and price filtering, adds a separate index for sorting, and selects only needed columns to reduce data transfer.",
+      "hint": "Consider indexing strategy, text search optimization, column selection, and query structure. What combination addresses all performance bottlenecks?",
+      "difficulty": "intermediate",
+      "points": 20
+    },
+    {
+      "id": "transaction-data-integrity",
+      "title": "Financial Transaction Integrity",
+      "description": "Ensure data consistency in a money transfer operation.",
+      "situation": "You're implementing a money transfer feature between user accounts. The operation must be atomic - either both accounts are updated or neither, even if the system crashes mid-operation.",
+      "codeExample": "Tables:\naccounts: id, user_id, balance, currency\ntransactions: id, from_account, to_account, amount, status, created_at\n\nTransfer $100 from Account A (ID: 123) to Account B (ID: 456)\nCurrent balances: A=$500, B=$200",
+      "options": [
+        "UPDATE accounts SET balance = balance - 100 WHERE id = 123;\nUPDATE accounts SET balance = balance + 100 WHERE id = 456;\nINSERT INTO transactions (from_account, to_account, amount, status) VALUES (123, 456, 100, 'completed');",
+        "BEGIN;\nUPDATE accounts SET balance = balance - 100 WHERE id = 123;\nUPDATE accounts SET balance = balance + 100 WHERE id = 456;\nINSERT INTO transactions (from_account, to_account, amount, status) VALUES (123, 456, 100, 'completed');\nCOMMIT;",
+        "START TRANSACTION;\n\n-- Check sufficient balance\nSELECT balance FROM accounts WHERE id = 123 FOR UPDATE;\n\n-- Validate balance >= transfer amount\nUPDATE accounts \nSET balance = balance - 100 \nWHERE id = 123 AND balance >= 100;\n\nIF ROW_COUNT() = 0 THEN\n  ROLLBACK;\n  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insufficient funds';\nEND IF;\n\nUPDATE accounts \nSET balance = balance + 100 \nWHERE id = 456;\n\nINSERT INTO transactions (from_account, to_account, amount, status, created_at) \nVALUES (123, 456, 100, 'completed', NOW());\n\nCOMMIT;",
+        "LOCK TABLES accounts WRITE;\nUPDATE accounts SET balance = balance - 100 WHERE id = 123;\nUPDATE accounts SET balance = balance + 100 WHERE id = 456;\nUNLOCK TABLES;"
+      ],
+      "correctAnswer": 2,
+      "explanation": "This solution uses proper transaction control with balance validation, row locking to prevent concurrent modifications, error handling for insufficient funds, and proper rollback mechanisms. It ensures both atomicity and business rule enforcement.",
+      "hint": "Consider ACID properties, concurrent access, business rule validation, and error handling. Which approach ensures complete data integrity?",
+      "difficulty": "intermediate",
+      "points": 17
+    },
+    {
+      "id": "nosql-vs-sql-decision",
+      "title": "Database Technology Selection",
+      "description": "Choose the right database technology for different application requirements.",
+      "situation": "Your company is building three new features: user activity tracking (millions of events/day), product catalog (complex relationships), and real-time chat (low latency). Choose the best database approach for each.",
+      "codeExample": "Requirements:\n1. Activity Tracking: 5M events/day, append-only, analytics queries\n2. Product Catalog: Complex relationships, ACID compliance, reporting\n3. Real-time Chat: Sub-100ms latency, horizontal scaling, simple queries\n\nBudget allows for multiple database technologies",
+      "options": [
+        "Use MySQL for everything to keep it simple",
+        "Use PostgreSQL for all three with different schemas",
+        "Activity Tracking: Time-series DB (InfluxDB/TimescaleDB)\nProduct Catalog: PostgreSQL with proper indexing\nReal-time Chat: Redis with persistence + MongoDB for history",
+        "Activity Tracking: MongoDB\nProduct Catalog: Neo4j graph database\nReal-time Chat: Cassandra"
+      ],
+      "correctAnswer": 2,
+      "explanation": "This approach matches each use case to optimal technology: time-series DB for high-volume analytics data, PostgreSQL for complex relational data requiring ACID compliance, and Redis for ultra-low latency with MongoDB for chat history persistence.",
+      "hint": "Consider the specific requirements of each use case: volume, relationships, consistency needs, and performance requirements. Which combination optimizes for each scenario?",
+      "difficulty": "advanced",
+      "points": 22
+    },
+    {
+      "id": "data-warehouse-design",
+      "title": "Analytics Data Warehouse Design",
+      "description": "Design a data warehouse schema for business intelligence and reporting.",
+      "situation": "Your company needs a data warehouse to analyze sales performance across multiple dimensions: time, geography, products, customers, and sales channels. The data comes from multiple operational systems.",
+      "codeExample": "Source systems:\n• E-commerce platform (orders, customers)\n• POS systems (in-store sales)\n• Inventory management (products, categories)\n• CRM (customer segments, campaigns)\n\nAnalytics needs: Sales trends, customer behavior, product performance, regional analysis",
+      "options": [
+        "Copy all operational tables directly into the warehouse",
+        "CREATE TABLE sales_fact (\n  sale_id BIGINT PRIMARY KEY,\n  date_key INT,\n  customer_key INT,\n  product_key INT,\n  store_key INT,\n  channel_key INT,\n  quantity INT,\n  unit_price DECIMAL(10,2),\n  total_amount DECIMAL(12,2),\n  cost_amount DECIMAL(12,2),\n  profit_amount DECIMAL(12,2)\n);\n\n-- Dimension tables\nCREATE TABLE dim_date (\n  date_key INT PRIMARY KEY,\n  full_date DATE,\n  year INT,\n  quarter INT,\n  month INT,\n  week INT,\n  day_of_week INT,\n  is_weekend BOOLEAN,\n  is_holiday BOOLEAN\n);\n\nCREATE TABLE dim_customer (\n  customer_key INT PRIMARY KEY,\n  customer_id VARCHAR(50),\n  segment VARCHAR(50),\n  acquisition_channel VARCHAR(50),\n  lifetime_value_bucket VARCHAR(20)\n);\n\nCREATE TABLE dim_product (\n  product_key INT PRIMARY KEY,\n  product_id VARCHAR(50),\n  category VARCHAR(100),\n  subcategory VARCHAR(100),\n  brand VARCHAR(100),\n  price_tier VARCHAR(20)\n);",
+        "Use a single flat table with all columns for easy querying",
+        "CREATE VIEW analytics_view AS SELECT * FROM orders JOIN customers JOIN products"
+      ],
+      "correctAnswer": 1,
+      "explanation": "This star schema design optimizes for analytical queries with a central fact table containing metrics and foreign keys to dimension tables. It supports efficient aggregation, filtering, and drilling down across multiple business dimensions.",
+      "hint": "Consider analytical query patterns, aggregation performance, and dimensional analysis needs. Which schema design optimizes for business intelligence queries?",
+      "difficulty": "advanced",
+      "points": 25
+    },
+    {
+      "id": "scaling-database-architecture",
+      "title": "Database Scaling Strategy",
+      "description": "Design a scaling solution for a rapidly growing application.",
+      "situation": "Your social media app has grown from 100K to 10M users. The main database is struggling with read queries (70% of traffic), writes are manageable, but response times are degrading during peak hours.",
+      "codeExample": "Current issues:\n• Read queries taking 2-5 seconds during peak\n• 70% read traffic, 30% write traffic\n• Peak: 50K concurrent users\n• Main bottlenecks: user feeds, search, analytics\n• Budget allows infrastructure investment",
+      "options": [
+        "Upgrade to a larger database server with more CPU and RAM",
+        "Implement vertical partitioning by splitting tables across databases",
+        "Read Replicas + Caching Strategy:\n- Master-slave replication with 3 read replicas\n- Redis cache for user sessions and hot data\n- CDN for static content\n- Application-level read/write splitting\n- Eventual consistency acceptable for feeds\n\nLong-term: Horizontal sharding by user_id ranges",
+        "Move everything to NoSQL to handle the scale"
+      ],
+      "correctAnswer": 2,
+      "explanation": "This comprehensive scaling strategy addresses the read-heavy workload with read replicas, implements caching for frequently accessed data, and plans for future horizontal scaling. It's cost-effective and addresses the specific 70/30 read/write pattern.",
+      "hint": "Consider the read-heavy workload pattern, acceptable consistency models, and cost-effective scaling approaches. Which strategy best addresses the specific bottlenecks?",
+      "difficulty": "advanced",
+      "points": 28
+    }
+  ]
+}

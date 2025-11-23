@@ -1,0 +1,200 @@
+{
+  "id": "devops-quiz",
+  "title": "DevOps Engineering Quiz",
+  "description": "Test your knowledge of DevOps practices with real-world scenarios covering CI/CD, infrastructure, monitoring, and incident response",
+  "category": "DevOps",
+  "icon": "Code",
+  "totalPoints": 125,
+  "theme": {
+    "primaryColor": "green",
+    "gradientFrom": "from-green-500",
+    "gradientTo": "to-emerald-600"
+  },
+  "metadata": {
+    "estimatedTime": "20-25 minutes",
+    "difficultyLevels": {
+      "beginner": 3,
+      "intermediate": 4,
+      "advanced": 3
+    }
+  },
+  "questions": [
+    {
+      "id": "cicd-pipeline-failure",
+      "title": "CI/CD Pipeline Debugging",
+      "description": "Your deployment pipeline is failing at the testing stage.",
+      "situation": "The CI/CD pipeline for your web application passes build but fails during the test execution phase. Tests work locally but fail in the pipeline.",
+      "codeExample": "Pipeline stages:\n- Checkout code (SUCCESS)\n- Install dependencies (SUCCESS)\n- Build application (SUCCESS)\n- Run tests (FAILED - Exit code: 1)\n- Deploy to staging (PENDING)\n- Deploy to production (PENDING)",
+      "options": [
+        "Check environment variables, test database connections, and review test logs in the CI environment",
+        "Skip the test stage temporarily to unblock deployments",
+        "Run tests locally and manually approve the deployment",
+        "Increase the pipeline timeout and retry"
+      ],
+      "correctAnswer": 0,
+      "explanation": "CI environments often have different configurations than local development. Check environment variables, database connections, external service availability, and review detailed logs to identify the root cause.",
+      "hint": "Think about what might be different between your local environment and the CI environment.",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "infrastructure-as-code",
+      "title": "Infrastructure Drift Detection",
+      "description": "Your production infrastructure does not match your Terraform state.",
+      "situation": "A manual change was made to production infrastructure outside of Terraform. Now your infrastructure has drifted from the defined state.",
+      "codeExample": "terraform plan shows:\n\nTerraform will perform the following actions:\n\n# aws_instance.web_server will be updated in-place\n~ resource \"aws_instance\" \"web_server\" {\n    ~ instance_type = \"t3.large\" -> \"t3.medium\"\n      # (10 unchanged attributes hidden)\n  }",
+      "options": [
+        "Run terraform apply to force the infrastructure back to the desired state",
+        "Import the current state with terraform import and update the code to match",
+        "Investigate the change, update Terraform code if the change is valid, or apply to revert if unauthorized",
+        "Ignore the drift since the application is working fine"
+      ],
+      "correctAnswer": 2,
+      "explanation": "First investigate why the change was made. If it was a valid change like scaling for performance, update your Terraform code. If unauthorized, revert with terraform apply and implement change controls.",
+      "hint": "Consider both the technical and process aspects. Why did this drift occur, and how do you prevent it?",
+      "difficulty": "intermediate",
+      "points": 15
+    },
+    {
+      "id": "monitoring-alerting",
+      "title": "Setting Up Effective Alerts",
+      "description": "You need to implement monitoring for a critical microservice.",
+      "situation": "Your payment processing service is critical but currently has no monitoring. You need to set up alerts that notify the team of real issues without causing alert fatigue.",
+      "options": [
+        "Alert on every HTTP 4xx and 5xx response immediately",
+        "Set up alerts for CPU > 80% and memory > 90% only",
+        "Monitor only when the service is completely down",
+        "Monitor error rate > 5%, response time > 2s, and service availability < 99% over 5-minute windows"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Effective alerts focus on user impact: error rates, response times, and availability. Use time windows to avoid noise from temporary spikes, and set thresholds based on SLAs and user experience.",
+      "hint": "Think about what actually affects users and how to balance catching real issues while avoiding false alarms.",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "secrets-management",
+      "title": "Secure Secrets Handling",
+      "description": "How should you manage database passwords in your containerized applications?",
+      "situation": "Your application needs database credentials, API keys, and certificates. These secrets should be secure, rotatable, and accessible to containers at runtime.",
+      "codeExample": "Current problem:\n# Database password hardcoded in environment variables\n# API keys stored in Docker image\n# Certificates in source code repository",
+      "options": [
+        "Store secrets in environment variables in the deployment manifests",
+        "Build secrets into the Docker image during the build process",
+        "Use a secrets management system like HashiCorp Vault or AWS Secrets Manager with runtime injection",
+        "Store secrets in a configuration file mounted from a shared volume"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Dedicated secrets management systems provide encryption at rest and in transit, audit trails, rotation capabilities, and fine-grained access control. They inject secrets at runtime, never storing them in images or code.",
+      "hint": "Consider the security principle of least privilege and the need for audit trails and rotation.",
+      "difficulty": "intermediate",
+      "points": 18
+    },
+    {
+      "id": "incident-response",
+      "title": "Production Incident Handling",
+      "description": "Your e-commerce site is experiencing a critical outage during peak hours.",
+      "situation": "It's Black Friday, your website is down, customers cannot checkout, and you are losing revenue. Multiple alerts are firing, and the team is stressed.",
+      "codeExample": "CRITICAL ALERTS:\n- Payment service: HTTP 500 errors\n- Database: Connection timeout\n- Load balancer: Health check failures\n- CDN: Origin server unreachable",
+      "options": [
+        "Have everyone investigate different components simultaneously",
+        "Immediately roll back the last deployment without investigation",
+        "Scale up all services and hope it resolves the issue",
+        "Establish incident command, designate roles, create communication channel, and systematically investigate"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Structured incident response with clear roles prevents chaos, ensures coordination, and leads to faster resolution while maintaining stakeholder communication.",
+      "hint": "Think about what works during high-stress situations with multiple people involved.",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "blue-green-deployment",
+      "title": "Zero-Downtime Deployment Strategy",
+      "description": "You need to deploy a major application update with zero downtime.",
+      "situation": "Your application serves millions of users 24/7. You need to deploy version 2.0 which includes database schema changes and new features, but cannot afford any downtime.",
+      "options": [
+        "Deploy directly to production during low-traffic hours",
+        "Use blue-green deployment: deploy to parallel environment, test, then switch traffic",
+        "Deploy gradually using feature flags with the new code disabled",
+        "Use rolling updates to replace instances one by one"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Blue-green deployment creates a complete parallel environment with the new version. After testing, you switch traffic instantly. If issues arise, you can switch back immediately, ensuring true zero downtime.",
+      "hint": "Consider which strategy gives you the fastest rollback capability and truly zero downtime.",
+      "difficulty": "intermediate",
+      "points": 16
+    },
+    {
+      "id": "cost-optimization",
+      "title": "Cloud Cost Management",
+      "description": "Your cloud bill has doubled in the last quarter without significant traffic increases.",
+      "situation": "Finance is asking questions about the cloud spend increase. You need to identify cost drivers and implement optimizations without impacting performance or reliability.",
+      "codeExample": "Cost analysis shows:\n- 40% increase in compute costs\n- 60% increase in storage costs\n- New data transfer charges\n- Underutilized reserved instances",
+      "options": [
+        "Immediately downsize all instances to save money",
+        "Analyze resource utilization, right-size instances, implement auto-scaling, review storage classes, and optimize data transfer",
+        "Move everything to the cheapest cloud regions available",
+        "Switch to spot instances for all workloads"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Effective cost optimization requires analysis of actual usage patterns, right-sizing based on metrics, implementing auto-scaling for variable workloads, using appropriate storage classes, and optimizing network topology.",
+      "hint": "Think about making data-driven decisions rather than blanket cost-cutting measures.",
+      "difficulty": "intermediate",
+      "points": 14
+    },
+    {
+      "id": "disaster-recovery",
+      "title": "Disaster Recovery Planning",
+      "description": "Your primary data center has gone offline due to a natural disaster.",
+      "situation": "A hurricane has knocked out your primary AWS region. You have 4 hours to restore service before hitting your SLA breach. Your RTO is 4 hours and RPO is 1 hour.",
+      "codeExample": "Current setup:\n- Primary: us-east-1 (offline)\n- Secondary: us-west-2 (standby)\n- Database: Cross-region replication\n- DNS: Route53 health checks",
+      "options": [
+        "Wait for the primary region to come back online",
+        "Manually restore from backup in a different region",
+        "Activate pre-configured disaster recovery environment, update DNS to point to secondary region, verify data consistency",
+        "Contact AWS support and wait for their guidance"
+      ],
+      "correctAnswer": 2,
+      "explanation": "A proper DR plan includes pre-configured secondary infrastructure, automated DNS failover, cross-region data replication, and documented procedures. Execute the plan immediately when disaster strikes.",
+      "hint": "Think about what should be prepared in advance versus what you do during the actual disaster.",
+      "difficulty": "advanced",
+      "points": 20
+    },
+    {
+      "id": "compliance-automation",
+      "title": "Security Compliance Automation",
+      "description": "Your organization needs to maintain SOC 2 compliance with growing infrastructure.",
+      "situation": "Manual compliance checks are becoming unmanageable as your infrastructure grows. You need to automate security controls and generate audit trails.",
+      "options": [
+        "Hire more security auditors to manually check everything",
+        "Implement policy-as-code, automated security scanning, and compliance monitoring tools",
+        "Document all current practices and review them quarterly",
+        "Only focus on compliance during the annual audit"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Policy-as-code tools, automated security scanning in CI/CD, infrastructure compliance monitoring, and automated audit trail generation scale compliance practices with infrastructure growth.",
+      "hint": "Consider how to make compliance verification continuous rather than periodic.",
+      "difficulty": "advanced",
+      "points": 18
+    },
+    {
+      "id": "observability-strategy",
+      "title": "Comprehensive Observability",
+      "description": "Your microservices architecture is growing complex and debugging issues is becoming difficult.",
+      "situation": "You have 15 microservices, and when something goes wrong, it takes hours to trace the issue across services. You need to implement comprehensive observability.",
+      "codeExample": "Current challenges:\n- No correlation between logs across services\n- Limited metrics granularity\n- No request tracing\n- Scattered monitoring tools",
+      "options": [
+        "Add more detailed logging to each service",
+        "Implement distributed tracing, structured logging, service mesh observability, and centralized metrics",
+        "Create more dashboards for each service",
+        "Set up more alerts on individual service metrics"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Modern microservices require the three pillars of observability: metrics, logs, and traces. Distributed tracing shows request flows, structured logging enables correlation, and service mesh provides network-level insights.",
+      "hint": "Think about the three pillars of observability and how they work together in a distributed system.",
+      "difficulty": "advanced",
+      "points": 22
+    }
+  ]
+}

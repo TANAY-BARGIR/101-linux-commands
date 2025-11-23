@@ -1,0 +1,144 @@
+'use client';
+
+type SchemaMarkupProps = {
+  type: 'WebSite' | 'Article' | 'BlogPosting' | 'BreadcrumbList' | 'FAQPage';
+  data: Record<string, unknown>;
+};
+
+export function SchemaMarkup({ type, data }: SchemaMarkupProps) {
+  // Base schema that all types will extend
+  const baseSchema = {
+    '@context': 'https://schema.org',
+    '@type': type,
+  };
+
+  // Merge the base schema with the provided data
+  const schema = { ...baseSchema, ...data };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+export function WebsiteSchema() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://devops-daily.com';
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${siteUrl}/#website`,
+    url: siteUrl,
+    name: 'DevOps Daily',
+    description: 'The latest DevOps news, tutorials, and guides',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${siteUrl}/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function ArticleSchema({
+  post,
+  title,
+  description,
+  publishedDate,
+  modifiedDate,
+  imageUrl,
+  authorName,
+  url,
+}: {
+  post?: any;
+  title?: string;
+  description?: string;
+  publishedDate?: string;
+  modifiedDate?: string;
+  imageUrl?: string;
+  authorName?: string;
+  url?: string;
+}) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://devops-daily.com';
+
+  // Support both old post object format and new individual props format
+  const articleUrl = url ? `${siteUrl}${url}` : `${siteUrl}/posts/${post?.slug}`;
+  const articleTitle = title || post?.title;
+  const articleDescription = description || post?.excerpt;
+  const articleImage = imageUrl
+    ? imageUrl.startsWith('http')
+      ? imageUrl
+      : `${siteUrl}${imageUrl}`
+    : post?.image
+      ? `${siteUrl}${post.image}`
+      : `${siteUrl}/og-image.png`;
+  const articlePublished = publishedDate || post?.publishedAt || post?.date;
+  const articleModified = modifiedDate || post?.updatedAt || post?.date;
+  const articleAuthor = authorName || post?.author?.name || 'DevOps Daily Team';
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': articleUrl,
+    },
+    headline: articleTitle,
+    description: articleDescription,
+    image: articleImage,
+    datePublished: articlePublished,
+    dateModified: articleModified,
+    author: {
+      '@type': 'Person',
+      name: articleAuthor,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'DevOps Daily',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteUrl}/logo.png`,
+      },
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+export function BreadcrumbSchema({ items }: { items: { name: string; url: string }[] }) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://devops-daily.com';
+
+  const itemListElement = items.map((item, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: item.name,
+    item: `${siteUrl}${item.url}`,
+  }));
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: itemListElement,
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}

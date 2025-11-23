@@ -1,0 +1,182 @@
+{
+  "id": "kubernetes-quiz",
+  "title": "Kubernetes Fundamentals Quiz",
+  "description": "Learn Kubernetes concepts through practical scenarios covering pods, services, deployments, and troubleshooting",
+  "category": "Kubernetes",
+  "icon": "Code",
+  "totalPoints": 115,
+  "theme": {
+    "primaryColor": "purple",
+    "gradientFrom": "from-purple-500",
+    "gradientTo": "to-indigo-600"
+  },
+  "metadata": {
+    "estimatedTime": "18-22 minutes",
+    "difficultyLevels": {
+      "beginner": 4,
+      "intermediate": 3,
+      "advanced": 2
+    }
+  },
+  "questions": [
+    {
+      "id": "pod-creation",
+      "title": "Creating Your First Pod",
+      "description": "What's the correct way to create a pod running nginx?",
+      "situation": "You need to deploy an nginx web server in a Kubernetes cluster.",
+      "codeExample": "# Goal: Create a pod named 'web-server' running nginx:1.20\n# The pod should be accessible on port 80",
+      "options": [
+        "kubectl apply -f - <<EOF\napiVersion: v1\nkind: Pod\nmetadata:\n  name: web-server\nspec:\n  containers:\n  - name: nginx\n    image: nginx:1.20\n    ports:\n    - containerPort: 80\nEOF",
+        "kubectl run web-server --image=nginx:1.20",
+        "kubectl create pod web-server --image=nginx:1.20 --port=80",
+        "kubectl run web-server --image=nginx:1.20 --port=80"
+      ],
+      "correctAnswer": 0,
+      "explanation": "While 'kubectl run' creates pods quickly, using YAML manifests with 'kubectl apply' is the best practice as it's declarative, version-controllable, and allows for more complex configurations.",
+      "hint": "Think about which approach is more maintainable and follows Kubernetes best practices.",
+      "difficulty": "beginner",
+      "points": 8
+    },
+    {
+      "id": "service-types",
+      "title": "Exposing Your Application",
+      "description": "How do you expose a pod to external traffic?",
+      "situation": "Your nginx pod is running, but you need to make it accessible from outside the cluster.",
+      "options": [
+        "kubectl expose pod web-server --type=ClusterIP --port=80",
+        "kubectl expose pod web-server --type=NodePort --port=80",
+        "kubectl create service web-server --port=80",
+        "kubectl expose pod web-server --type=LoadBalancer --port=80"
+      ],
+      "correctAnswer": 3,
+      "explanation": "LoadBalancer service type exposes the service externally using a cloud provider's load balancer, making it accessible from outside the cluster. NodePort only works if you can access cluster nodes directly.",
+      "hint": "Consider which service type actually makes your application accessible from the internet.",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "deployment-scaling",
+      "title": "Scaling Applications",
+      "description": "Your application is experiencing high traffic. How do you scale it?",
+      "situation": "You have a deployment called 'web-app' with 1 replica, but you need 5 replicas to handle traffic.",
+      "codeExample": "# Current state:\n# deployment.apps/web-app   1/1     1            1           2m\n# Need: 5 replicas running",
+      "options": [
+        "kubectl scale pod web-app --replicas=5",
+        "kubectl scale deployment web-app --replicas=5",
+        "kubectl edit deployment web-app\n# Change replicas: 5",
+        "kubectl patch deployment web-app -p '{\"spec\":{\"replicas\":5}}'"
+      ],
+      "correctAnswer": 1,
+      "explanation": "kubectl scale deployment is the most direct and common way to scale a deployment. While edit and patch work, scale is specifically designed for this purpose and is more intuitive.",
+      "hint": "What's the most straightforward command for changing the number of replicas?",
+      "difficulty": "beginner",
+      "points": 8
+    },
+    {
+      "id": "troubleshooting-pods",
+      "title": "Debugging Failed Pods",
+      "description": "Your pod is in CrashLoopBackOff state. How do you diagnose the issue?",
+      "situation": "A pod named 'app-pod' keeps restarting and shows CrashLoopBackOff status.",
+      "codeExample": "$ kubectl get pods\nNAME      READY   STATUS             RESTARTS   AGE\napp-pod   0/1     CrashLoopBackOff   4          2m",
+      "options": [
+        "kubectl delete pod app-pod",
+        "kubectl describe pod app-pod && kubectl logs app-pod",
+        "kubectl restart pod app-pod",
+        "kubectl get events"
+      ],
+      "correctAnswer": 1,
+      "explanation": "kubectl describe shows pod events and status details, while kubectl logs shows the application's output. Together, they provide comprehensive debugging information for pod issues.",
+      "hint": "You need to gather information about what's going wrong. Which commands provide the most diagnostic information?",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "configmap-usage",
+      "title": "Managing Configuration",
+      "description": "How do you inject configuration into a pod without rebuilding the image?",
+      "situation": "Your application needs database connection settings that might change between environments.",
+      "codeExample": "# You have these config values:\n# DB_HOST=postgres.example.com\n# DB_PORT=5432\n# DB_NAME=myapp",
+      "options": [
+        "kubectl create configmap db-config --from-literal=DB_HOST=postgres.example.com --from-literal=DB_PORT=5432 --from-literal=DB_NAME=myapp",
+        "kubectl create secret db-config --from-literal=DB_HOST=postgres.example.com",
+        "kubectl set env deployment/app DB_HOST=postgres.example.com",
+        "Rebuild the Docker image with the config values"
+      ],
+      "correctAnswer": 0,
+      "explanation": "ConfigMaps are specifically designed for non-sensitive configuration data. They can be mounted as volumes or exposed as environment variables, keeping configuration separate from application code.",
+      "hint": "Think about Kubernetes resources designed specifically for configuration management.",
+      "difficulty": "intermediate",
+      "points": 12
+    },
+    {
+      "id": "persistent-storage",
+      "title": "Data Persistence",
+      "description": "How do you ensure database data survives pod restarts?",
+      "situation": "You're running a PostgreSQL database pod that needs to retain data even if the pod is recreated.",
+      "options": [
+        "Use hostPath volume to mount host directory",
+        "Create a PersistentVolumeClaim and mount it to the database pod",
+        "Use emptyDir volume for data storage",
+        "Store data in the container's filesystem"
+      ],
+      "correctAnswer": 1,
+      "explanation": "PersistentVolumeClaims provide durable storage that survives pod restarts and rescheduling. They abstract the underlying storage implementation and can be dynamically provisioned.",
+      "hint": "What Kubernetes feature is specifically designed for durable, persistent storage?",
+      "difficulty": "intermediate",
+      "points": 15
+    },
+    {
+      "id": "resource-limits",
+      "title": "Resource Management",
+      "description": "How do you prevent a single pod from consuming all cluster resources?",
+      "situation": "You need to ensure your application pod doesn't use more than 500Mi of memory and 0.5 CPU cores.",
+      "codeExample": "# Pod should be limited to:\n# Memory: 500Mi\n# CPU: 0.5 cores (500m)",
+      "options": [
+        "Set NODE_OPTIONS='--max-old-space-size=500' environment variable",
+        "Use cgroups on the host system",
+        "Set resources.limits in the pod specification:\n  limits:\n    memory: \"500Mi\"\n    cpu: \"500m\"",
+        "Configure the container runtime limits"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Kubernetes resource limits in the pod specification enforce hard limits on CPU and memory usage, preventing pods from consuming excessive cluster resources and affecting other workloads.",
+      "hint": "What's the Kubernetes-native way to control resource consumption?",
+      "difficulty": "intermediate",
+      "points": 13
+    },
+    {
+      "id": "rolling-updates",
+      "title": "Zero-Downtime Deployments",
+      "description": "How do you update your application without service interruption?",
+      "situation": "You need to update your web application from version 1.0 to 2.0 without any downtime.",
+      "codeExample": "# Current: myapp:1.0 (3 replicas)\n# Target: myapp:2.0 (zero downtime)",
+      "options": [
+        "kubectl delete deployment myapp && kubectl create deployment myapp --image=myapp:2.0",
+        "kubectl set image deployment/myapp container-name=myapp:2.0",
+        "kubectl scale deployment myapp --replicas=0 && kubectl scale deployment myapp --replicas=3",
+        "kubectl replace -f new-deployment.yaml"
+      ],
+      "correctAnswer": 1,
+      "explanation": "kubectl set image triggers a rolling update, gradually replacing old pods with new ones. Kubernetes ensures availability by maintaining running instances during the update process.",
+      "hint": "Which approach updates the image while maintaining service availability?",
+      "difficulty": "advanced",
+      "points": 18
+    },
+    {
+      "id": "network-policies",
+      "title": "Securing Pod Communication",
+      "description": "How do you restrict network traffic between pods for security?",
+      "situation": "Your frontend pods should only communicate with backend pods, and backend pods should only accept traffic from frontend pods.",
+      "options": [
+        "Use iptables rules on each node",
+        "Configure firewall rules in the cloud provider",
+        "Create NetworkPolicy resources to define allowed traffic",
+        "Use service mesh like Istio for all traffic control"
+      ],
+      "correctAnswer": 2,
+      "explanation": "NetworkPolicies are Kubernetes-native resources that define rules for pod-to-pod communication. They work at the cluster level and are enforced by the CNI plugin.",
+      "hint": "What Kubernetes resource is specifically designed for controlling network traffic between pods?",
+      "difficulty": "advanced",
+      "points": 19
+    }
+  ]
+}

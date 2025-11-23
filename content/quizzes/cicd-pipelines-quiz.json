@@ -1,0 +1,165 @@
+{
+  "id": "cicd-pipelines-quiz",
+  "title": "CI/CD Pipelines Quiz",
+  "description": "Master continuous integration and deployment with practical pipeline scenarios and best practices",
+  "category": "CI/CD",
+  "icon": "Code",
+  "totalPoints": 96,
+  "theme": {
+    "primaryColor": "emerald",
+    "gradientFrom": "from-emerald-500",
+    "gradientTo": "to-teal-600"
+  },
+  "metadata": {
+    "estimatedTime": "15-20 minutes",
+    "difficultyLevels": {
+      "beginner": 3,
+      "intermediate": 3,
+      "advanced": 2
+    }
+  },
+  "questions": [
+    {
+      "id": "pipeline-basics",
+      "title": "Setting Up Your First Pipeline",
+      "description": "What's the correct order of stages in a basic CI/CD pipeline?",
+      "situation": "You're setting up a CI/CD pipeline for a web application that needs to be tested and deployed to production.",
+      "codeExample": "# Your application:\n- Unit tests\n- Integration tests\n- Docker image build\n- Deploy to staging\n- Deploy to production",
+      "options": [
+        "Build → Test → Deploy",
+        "Build → Unit Tests → Integration Tests → Deploy to Staging → Deploy to Production",
+        "Test → Build → Deploy",
+        "Deploy → Test → Build"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The correct order follows the principle of fail fast: build first, run unit tests (fastest), then integration tests (slower), deploy to staging for verification, and finally to production. This catches issues early and reduces waste.",
+      "hint": "Think about catching problems as early as possible. What order minimizes wasted effort?",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "branch-strategies",
+      "title": "Git Branching for CI/CD",
+      "description": "Which branching strategy works best with automated deployments?",
+      "situation": "Your team needs to deploy features frequently while maintaining production stability. Multiple developers work on features simultaneously.",
+      "options": [
+        "Trunk-based development with feature flags and automated deployments from main branch",
+        "Create a branch for each environment (dev, staging, prod)",
+        "Long-lived feature branches merged monthly",
+        "Everyone commits directly to main branch"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Trunk-based development with short-lived branches and feature flags enables continuous integration, reduces merge conflicts, and allows controlled feature releases. Combined with automated deployments, it supports rapid delivery.",
+      "hint": "Consider what enables frequent integration while maintaining control over feature releases.",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "testing-pyramid",
+      "title": "Test Automation Strategy",
+      "description": "How should you structure your automated tests in a CI pipeline?",
+      "situation": "You need to balance test coverage with pipeline speed. Your pipeline is taking 45 minutes to run.",
+      "codeExample": "# Current situation:\n# - 200 unit tests (2 minutes)\n# - 50 integration tests (15 minutes)\n# - 20 end-to-end tests (28 minutes)\n# Total: 45 minutes",
+      "options": [
+        "Run only end-to-end tests since they test everything",
+        "Run all tests in parallel regardless of type",
+        "Follow the test pyramid: many fast unit tests, fewer integration tests, minimal E2E tests. Run unit tests on every commit, integration tests before merge, E2E tests before deployment",
+        "Skip automated tests and rely on manual QA"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The test pyramid prioritizes fast, focused unit tests that run frequently, with fewer but comprehensive integration tests, and minimal slow E2E tests. This balances coverage with speed and gives rapid feedback.",
+      "hint": "What approach gives you fast feedback while maintaining good coverage?",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "environment-config",
+      "title": "Managing Environment Configuration",
+      "description": "How should you handle different configurations across dev, staging, and production?",
+      "situation": "Your application needs different database URLs, API keys, and feature flags for each environment.",
+      "codeExample": "# Need to manage:\n# - Database URLs (different per environment)\n# - API keys (secrets)\n# - Feature flags\n# - Resource limits",
+      "options": [
+        "Hard-code values in application code with if/else statements",
+        "Store all configs including secrets in Git repository",
+        "Use different branches for each environment",
+        "Use environment variables and secret management tools (like AWS Secrets Manager, HashiCorp Vault) with separate configs per environment"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Environment variables separate configuration from code, while secret management tools handle sensitive data securely. This follows the 12-factor app principles and prevents secrets from leaking into version control.",
+      "hint": "What approach keeps secrets secure while making configuration manageable?",
+      "difficulty": "intermediate",
+      "points": 13
+    },
+    {
+      "id": "deployment-strategies",
+      "title": "Zero-Downtime Deployments",
+      "description": "Your production application serves 10,000 concurrent users. How do you deploy updates without downtime?",
+      "situation": "You need to deploy a new version of your application that includes database migrations and code changes.",
+      "codeExample": "# Requirements:\n# - No downtime\n# - Ability to rollback quickly\n# - Verify new version before full rollout",
+      "options": [
+        "Stop all servers, update, restart all at once",
+        "Blue-green deployment: deploy to new environment, switch traffic after verification, keep old environment for quick rollback",
+        "Update servers one by one manually",
+        "Deploy at 3 AM when traffic is lowest"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Blue-green deployments eliminate downtime by running two identical environments. Deploy to the inactive environment, verify it works, then switch traffic. The old environment remains available for instant rollback if issues arise.",
+      "hint": "What strategy allows you to verify the new version is working before directing user traffic to it?",
+      "difficulty": "intermediate",
+      "points": 15
+    },
+    {
+      "id": "artifact-management",
+      "title": "Build Artifact Strategy",
+      "description": "How should you handle build artifacts in your CI/CD pipeline?",
+      "situation": "Your team builds Docker images, npm packages, and compiled binaries. You need consistency across environments.",
+      "codeExample": "# Build outputs:\n# - Docker images\n# - npm packages  \n# - JAR files\n# - Configuration files",
+      "options": [
+        "Rebuild from source in each environment",
+        "Store artifacts on developer laptops",
+        "Build once, store in artifact repository (Docker Registry, npm registry, Artifactory), deploy the same artifact to all environments",
+        "Email artifacts to operations team"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Building once and promoting the same immutable artifact through environments ensures consistency and eliminates 'works on my machine' issues. Artifact repositories provide versioning, access control, and reliable storage.",
+      "hint": "What ensures you're deploying exactly the same code that was tested?",
+      "difficulty": "intermediate",
+      "points": 12
+    },
+    {
+      "id": "pipeline-security",
+      "title": "Securing Your CI/CD Pipeline",
+      "description": "What security practices should be implemented in your CI/CD pipeline?",
+      "situation": "Your pipeline has access to production systems and secrets. You need to prevent security vulnerabilities.",
+      "options": [
+        "Implement SAST/DAST scanning, dependency vulnerability checks, secret scanning, least-privilege access, and audit logging",
+        "Only allow senior developers to run pipelines",
+        "Run security scans manually once per quarter",
+        "Trust that code reviews catch all security issues"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Comprehensive security includes automated scanning for code vulnerabilities (SAST), runtime vulnerabilities (DAST), dependency issues, leaked secrets, proper access controls, and audit trails. Security should be automated and continuous.",
+      "hint": "What approach automates security checks and prevents multiple types of vulnerabilities?",
+      "difficulty": "advanced",
+      "points": 18
+    },
+    {
+      "id": "pipeline-optimization",
+      "title": "Optimizing Pipeline Performance",
+      "description": "Your CI/CD pipeline takes 30 minutes to run. How do you optimize it?",
+      "situation": "Developers complain about slow feedback. The pipeline runs tests sequentially and rebuilds everything from scratch each time.",
+      "codeExample": "# Current pipeline:\n# - Install dependencies (8 min)\n# - Lint code (3 min)\n# - Unit tests (10 min)\n# - Integration tests (9 min)\n# Total: 30 minutes",
+      "options": [
+        "Skip tests to make it faster",
+        "Run pipeline less frequently",
+        "Tell developers to be patient",
+        "Parallelize test stages, cache dependencies, use incremental builds, and optimize Docker layer caching"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Modern CI/CD optimization involves running independent stages in parallel, caching dependencies and build artifacts, using incremental builds that only rebuild changed code, and optimizing Docker builds with proper layer caching.",
+      "hint": "What techniques can reduce redundant work while maintaining all quality checks?",
+      "difficulty": "advanced",
+      "points": 18
+    }
+  ]
+}
