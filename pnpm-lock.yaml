@@ -19,7 +19,7 @@ importers:
         version: 10.2.9(next@15.2.4(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(webpack@5.99.9)
       '@hookform/resolvers':
         specifier: ^3.10.0
-        version: 3.10.0(react-hook-form@7.66.0(react@19.2.0))
+        version: 3.10.0(react-hook-form@7.66.1(react@19.2.0))
       '@next/third-parties':
         specifier: ^15.5.6
         version: 15.5.6(next@15.2.4(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
@@ -186,8 +186,8 @@ importers:
         specifier: ^19.2.0
         version: 19.2.0(react@19.2.0)
       react-hook-form:
-        specifier: ^7.66.0
-        version: 7.66.0(react@19.2.0)
+        specifier: ^7.66.1
+        version: 7.66.1(react@19.2.0)
       react-resizable-panels:
         specifier: ^2.1.9
         version: 2.1.9(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -4503,8 +4503,8 @@ packages:
     peerDependencies:
       react: ^19.2.0
 
-  react-hook-form@7.66.0:
-    resolution: {integrity: sha512-xXBqsWGKrY46ZqaHDo+ZUYiMUgi8suYu5kdrS20EG8KiL7VRQitEbNjm+UcrDYrNi1YLyfpmAeGjCZYXLT9YBw==}
+  react-hook-form@7.66.1:
+    resolution: {integrity: sha512-2KnjpgG2Rhbi+CIiIBQQ9Df6sMGH5ExNyFl4Hw9qO7pIqMBR8Bvu9RQyjl3JM4vehzCh9soiNUM/xYMswb2EiA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -6205,9 +6205,9 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@hookform/resolvers@3.10.0(react-hook-form@7.66.0(react@19.2.0))':
+  '@hookform/resolvers@3.10.0(react-hook-form@7.66.1(react@19.2.0))':
     dependencies:
-      react-hook-form: 7.66.0(react@19.2.0)
+      react-hook-form: 7.66.1(react@19.2.0)
 
   '@humanfs/core@0.19.1': {}
 
@@ -9747,7 +9747,7 @@ snapshots:
       react: 19.2.0
       scheduler: 0.27.0
 
-  react-hook-form@7.66.0(react@19.2.0):
+  react-hook-form@7.66.1(react@19.2.0):
     dependencies:
       react: 19.2.0
 
