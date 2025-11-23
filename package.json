@@ -91,7 +91,7 @@
     "openai": "^6.9.0",
     "react": "^19.2.0",
     "react-confetti": "^6.4.0",
-    "react-day-picker": "8.10.1",
+    "react-day-picker": "9.11.2",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.66.0",
     "react-resizable-panels": "^2.1.9",
