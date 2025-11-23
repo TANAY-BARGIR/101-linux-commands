@@ -1,0 +1,221 @@
+{
+  "id": "aws-quiz",
+  "title": "AWS Cloud Services Quiz",
+  "description": "Master cloud architecture through real-world AWS scenarios covering compute, storage, networking, and best practices",
+  "category": "AWS",
+  "icon": "Cloud",
+  "totalPoints": 135,
+  "theme": {
+    "primaryColor": "orange",
+    "gradientFrom": "from-orange-500",
+    "gradientTo": "to-amber-600"
+  },
+  "metadata": {
+    "estimatedTime": "22-28 minutes",
+    "difficultyLevels": {
+      "beginner": 4,
+      "intermediate": 4,
+      "advanced": 3
+    }
+  },
+  "questions": [
+    {
+      "id": "ec2-instance-selection",
+      "title": "Right-Sizing Your Compute",
+      "description": "Choose the appropriate EC2 instance type for a specific workload.",
+      "situation": "You're running a web application that experiences predictable traffic spikes during business hours (9 AM - 6 PM) and needs to handle CPU-intensive image processing.",
+      "codeExample": "Requirements:\n• Baseline: 2 vCPUs, 4GB RAM\n• Peak: 8 vCPUs, 16GB RAM (business hours)\n• Cost optimization is important\n• Consistent performance needed",
+      "options": [
+        "Use m5.large with Scheduled Scaling",
+        "Use c5.2xlarge instances with Auto Scaling",
+        "Use t3.medium with burstable performance",
+        "Use t3.xlarge with unlimited burst mode"
+      ],
+      "correctAnswer": 0,
+      "explanation": "m5.large provides consistent baseline performance for regular operations, and Scheduled Scaling can automatically add capacity during predictable business hour spikes, optimizing both performance and cost.",
+      "hint": "Consider both baseline performance needs and predictable scaling patterns. Which approach handles both requirements cost-effectively?",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "s3-storage-classes",
+      "title": "Optimizing Storage Costs",
+      "description": "Select the right S3 storage strategy for different data access patterns.",
+      "situation": "Your company has 3 types of data: active user files (daily access), backup files (monthly access), and compliance archives (yearly access, 7-year retention).",
+      "codeExample": "Data Types:\n• User files: 500GB, accessed daily\n• Backups: 2TB, accessed monthly\n• Archives: 10TB, accessed yearly, must retain 7 years",
+      "options": [
+        "Store everything in S3 Standard for simplicity",
+        "S3 Standard for user files, S3 Standard-IA for backups, S3 Glacier Deep Archive for compliance",
+        "S3 Intelligent-Tiering for all data types",
+        "S3 One Zone-IA for all data to minimize costs"
+      ],
+      "correctAnswer": 1,
+      "explanation": "This strategy matches storage classes to access patterns: Standard for frequent access, Standard-IA for infrequent monthly access, and Glacier Deep Archive for long-term retention with rare access.",
+      "hint": "Match storage classes to access frequency and cost requirements. What's the most cost-effective approach for each access pattern?",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "database-selection",
+      "title": "Choosing the Right Database",
+      "description": "Select the appropriate AWS database service for your application needs.",
+      "situation": "You're building a social media platform that needs to store user profiles, posts, comments, and real-time chat messages with global distribution requirements.",
+      "codeExample": "Requirements:\n• User profiles: Structured data, ACID compliance\n• Posts/Comments: Fast reads, eventual consistency OK\n• Chat messages: Real-time, low latency globally\n• Expected: 1M users, global audience",
+      "options": [
+        "Use RDS MySQL for everything",
+        "RDS for user profiles, DynamoDB for posts/comments, ElastiCache for chat",
+        "RDS for profiles, DynamoDB Global Tables for posts, DynamoDB with DAX for chat",
+        "Aurora Global Database for everything"
+      ],
+      "correctAnswer": 2,
+      "explanation": "This approach uses the right tool for each job: RDS for ACID-compliant user data, DynamoDB Global Tables for globally distributed posts with eventual consistency, and DynamoDB with DAX for ultra-low latency chat.",
+      "hint": "Consider the specific requirements of each data type. Which combination optimizes for performance, consistency, and global distribution?",
+      "difficulty": "beginner",
+      "points": 15
+    },
+    {
+      "id": "vpc-security-design",
+      "title": "Network Security Architecture",
+      "description": "Design a secure VPC architecture for a three-tier web application.",
+      "situation": "You need to deploy a web application with frontend, API backend, and database tiers while ensuring security best practices and internet access where needed.",
+      "codeExample": "Architecture:\n• Web servers: Need internet access (inbound/outbound)\n• API servers: Outbound internet only (for API calls)\n• Database: No internet access\n• All tiers need to communicate with each other",
+      "options": [
+        "Single public subnet with security groups for all tiers",
+        "Public subnet for web, private subnets for API/DB, NAT Gateway for API outbound access",
+        "All private subnets with VPN access only",
+        "Public subnets for web/API, private subnet for DB only"
+      ],
+      "correctAnswer": 1,
+      "explanation": "This follows security best practices: public subnet for web tier (needs inbound internet), private subnets for API/DB (more secure), and NAT Gateway allows API servers secure outbound internet access without exposing them to inbound traffic.",
+      "hint": "Think about the principle of least privilege. Which architecture minimizes internet exposure while meeting all requirements?",
+      "difficulty": "beginner",
+      "points": 13
+    },
+    {
+      "id": "auto-scaling-strategy",
+      "title": "Dynamic Scaling Configuration",
+      "description": "Configure Auto Scaling to handle unpredictable traffic patterns efficiently.",
+      "situation": "Your e-commerce site experiences traffic spikes during flash sales (10x normal traffic in minutes) and needs to scale quickly while avoiding unnecessary costs during normal periods.",
+      "codeExample": "Traffic Pattern:\n• Normal: 100-200 concurrent users\n• Flash sale: 2000+ users in < 5 minutes\n• Sales announced on social media (unpredictable timing)\n• Cost optimization important during low traffic",
+      "options": [
+        "Use Scheduled Scaling for known sale times",
+        "Target Tracking Scaling on CPU utilization (70% target)",
+        "Step Scaling with multiple CloudWatch alarms for aggressive scaling",
+        "Predictive Scaling based on historical patterns"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Step Scaling with multiple CloudWatch alarms allows for aggressive scaling during traffic spikes (add many instances quickly when CPU > 80%) while also scaling down during normal periods. This handles unpredictable spikes better than gradual target tracking.",
+      "hint": "Consider the unpredictable nature and speed of traffic spikes. Which scaling method can respond most aggressively to sudden changes?",
+      "difficulty": "intermediate",
+      "points": 16
+    },
+    {
+      "id": "load-balancer-selection",
+      "title": "Load Balancer Strategy",
+      "description": "Choose the right load balancing solution for a microservices architecture.",
+      "situation": "You have a microservices application with HTTP APIs, WebSocket connections for real-time features, and need SSL termination, path-based routing, and health checks.",
+      "codeExample": "Requirements:\n• HTTP REST APIs on different paths (/api/users, /api/orders)\n• WebSocket connections for real-time notifications\n• SSL termination at load balancer\n• Advanced health checks\n• Cost-effective solution",
+      "options": [
+        "Application Load Balancer with target groups",
+        "Classic Load Balancer for simplicity",
+        "Network Load Balancer for high performance",
+        "Multiple Classic Load Balancers for each service"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Application Load Balancer supports Layer 7 routing (path-based), WebSocket connections, SSL termination, and advanced health checks. It's perfect for microservices with different routing requirements.",
+      "hint": "Consider which load balancer type supports advanced Layer 7 features like path-based routing and WebSocket connections.",
+      "difficulty": "intermediate",
+      "points": 14
+    },
+    {
+      "id": "serverless-vs-containers",
+      "title": "Compute Architecture Decision",
+      "description": "Decide between serverless and containerized solutions for different use cases.",
+      "situation": "You need to implement three services: a file processing service (triggered by S3 uploads), a user authentication API (steady traffic), and a batch data processing job (runs nightly).",
+      "codeExample": "Services:\n1. File processor: Triggered by uploads, processing takes 30 seconds\n2. Auth API: Steady 1000 requests/hour, needs low latency\n3. Batch job: Runs for 2 hours nightly, processes 1TB data",
+      "options": [
+        "Use Lambda for everything",
+        "Use ECS for everything",
+        "Lambda for file processing, ECS for auth API, ECS/Batch for batch job",
+        "Lambda for file processing and batch job, ECS for auth API"
+      ],
+      "correctAnswer": 2,
+      "explanation": "This matches each service to the optimal compute model: Lambda for event-driven file processing, ECS for the steady-state API (better cost for consistent load), and ECS/Batch for long-running batch processing (Lambda has 15-minute limit).",
+      "hint": "Consider the execution patterns and duration limits. Which compute service is optimal for each specific use case?",
+      "difficulty": "intermediate",
+      "points": 18
+    },
+    {
+      "id": "iam-security-model",
+      "title": "IAM Security Best Practices",
+      "description": "Design secure IAM policies for a team-based development environment.",
+      "situation": "You have developers, DevOps engineers, and data analysts who need different levels of access to AWS resources. Security requires principle of least privilege and audit trails.",
+      "codeExample": "Teams:\n• Developers: EC2, RDS, S3 buckets for their projects only\n• DevOps: Full infrastructure access, cannot access sensitive data\n• Data Analysts: Read-only S3 data buckets, Athena, no infrastructure\n• All actions must be logged and auditable",
+      "options": [
+        "Create individual IAM users with attached policies for each person",
+        "Share IAM credentials among team members for simplicity",
+        "Use root account with MFA for all operations",
+        "Use IAM roles with groups, enable CloudTrail, implement resource tagging for access control"
+      ],
+      "correctAnswer": 3,
+      "explanation": "IAM roles with groups provide scalable permission management, CloudTrail ensures all actions are logged, and resource tagging allows fine-grained access control based on project ownership while maintaining least privilege.",
+      "hint": "Think about scalability, auditability, and granular access control. Which approach handles all requirements while following security best practices?",
+      "difficulty": "intermediate",
+      "points": 16
+    },
+    {
+      "id": "disaster-recovery-strategy",
+      "title": "Multi-Region Disaster Recovery",
+      "description": "Design a disaster recovery strategy for a critical business application.",
+      "situation": "Your financial application requires 99.9% uptime, <1 hour RTO (Recovery Time Objective), and <15 minutes RPO (Recovery Point Objective). Primary region is us-east-1.",
+      "codeExample": "Requirements:\n• RTO: < 1 hour (time to restore service)\n• RPO: < 15 minutes (acceptable data loss)\n• Cost-conscious but uptime critical\n• Database: 500GB, high transaction volume\n• Application: Stateless web services",
+      "options": [
+        "Backup and Restore: Daily snapshots to secondary region",
+        "Pilot Light: Core services ready in secondary region, scale up during disaster",
+        "Multi-Site Active-Active: Full deployment in both regions",
+        "Warm Standby: Scaled-down version running in secondary region"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Warm Standby meets the RTO/RPO requirements cost-effectively. It runs a smaller version of the environment that can quickly scale up, with database replication ensuring the 15-minute RPO, while being more cost-effective than active-active.",
+      "hint": "Balance the strict RTO/RPO requirements with cost considerations. Which strategy can meet timing requirements without running full duplicate infrastructure?",
+      "difficulty": "advanced",
+      "points": 22
+    },
+    {
+      "id": "cost-optimization-analysis",
+      "title": "AWS Cost Optimization",
+      "description": "Optimize AWS costs for a growing startup without impacting performance.",
+      "situation": "Your startup's AWS bill is $15K/month: 60% EC2, 25% RDS, 15% other services. Traffic varies significantly, and you need to cut costs by 40% while maintaining performance.",
+      "codeExample": "Current Setup:\n• 20 x m5.large instances (always on)\n• RDS MySQL db.r5.xlarge (always on)\n• 5TB S3 Standard storage\n• Data transfer costs from multiple AZs",
+      "options": [
+        "Switch everything to smaller instance types",
+        "Implement Reserved Instances, Spot Instances for non-critical workloads, S3 lifecycle policies, and RDS optimization",
+        "Move everything to a single AZ to reduce data transfer",
+        "Migrate to on-premises to avoid cloud costs"
+      ],
+      "correctAnswer": 1,
+      "explanation": "This comprehensive approach addresses the major cost drivers: Reserved Instances for predictable workloads (up to 75% savings), Spot Instances for fault-tolerant tasks, S3 lifecycle policies for storage optimization, and RDS right-sizing or Aurora Serverless for variable workloads.",
+      "hint": "Look at the cost breakdown and consider multiple optimization strategies. Which approach addresses all major cost components while maintaining performance?",
+      "difficulty": "advanced",
+      "points": 20
+    },
+    {
+      "id": "enterprise-migration-strategy",
+      "title": "Large-Scale Migration Planning",
+      "description": "Plan the migration strategy for a legacy enterprise application to AWS.",
+      "situation": "You need to migrate a monolithic .NET application with SQL Server database, file shares, and batch jobs. 500 users, 2TB database, minimal downtime allowed, tight deadline.",
+      "codeExample": "Legacy System:\n• Monolithic .NET Framework app on Windows Server\n• SQL Server 2016 (2TB database)\n• Shared file storage (500GB)\n• Nightly batch processing\n• <4 hours downtime allowed for cutover",
+      "options": [
+        "Use AWS Application Migration Service for infrastructure, RDS for database, staged migration approach",
+        "Rewrite the entire application as cloud-native microservices",
+        "Lift-and-shift to EC2 with gradual modernization",
+        "Keep on-premises and use AWS for backup only"
+      ],
+      "correctAnswer": 0,
+      "explanation": "AWS Application Migration Service provides automated lift-and-shift with minimal downtime, RDS handles the database migration with point-in-time recovery, and a staged approach allows testing and rollback capabilities while meeting the tight deadline and downtime requirements.",
+      "hint": "Consider the constraints: tight deadline, minimal downtime, and large database. Which approach minimizes risk while meeting all requirements?",
+      "difficulty": "advanced",
+      "points": 25
+    }
+  ]
+}

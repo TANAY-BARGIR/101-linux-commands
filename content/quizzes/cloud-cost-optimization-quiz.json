@@ -1,0 +1,203 @@
+{
+  "id": "cloud-cost-optimization-quiz",
+  "title": "Cloud Cost Optimization Quiz",
+  "description": "Investigate mysterious cost spikes, hunt down wasteful spending, and optimize your cloud bill like a detective solving financial crimes",
+  "category": "Cost Optimization",
+  "icon": "DollarSign",
+  "totalPoints": 135,
+  "theme": {
+    "primaryColor": "emerald",
+    "gradientFrom": "from-emerald-500",
+    "gradientTo": "to-teal-600"
+  },
+  "metadata": {
+    "estimatedTime": "20-25 minutes",
+    "difficultyLevels": {
+      "beginner": 4,
+      "intermediate": 4,
+      "advanced": 2
+    }
+  },
+  "questions": [
+    {
+      "id": "mysterious-storage-spike",
+      "title": "The $3K Storage Bill Mystery",
+      "description": "Your S3 storage costs tripled overnight with no apparent reason.",
+      "situation": "Your monthly S3 bill jumped from $1,000 to $3,200 overnight. The development team claims they didn't upload anything major, but something is definitely wrong.",
+      "codeExample": "AWS Cost Explorer shows:\n- S3 Standard storage: $1,200 → $3,200 (167% increase)\n- S3 requests: $50 → $450 (800% increase)\n- Data Transfer Out: $200 → $200 (no change)\n\nStorage breakdown:\n- Production bucket: 500GB (normal)\n- Staging bucket: 200GB (normal)\n- Backup bucket: 2.1TB (was 800GB last week!)\n- Logs bucket: 1.8TB (was 200GB last week!)",
+      "options": [
+        "Check for failed lifecycle policies, investigate backup retention settings, and audit log rotation configurations",
+        "Contact AWS support to dispute the charges",
+        "Delete old backups and logs immediately to reduce costs",
+        "Switch to cheaper storage classes for all buckets"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Sudden storage spikes often indicate failed automation. Check lifecycle policies that should move data to cheaper tiers or delete old files, investigate backup retention that might be keeping too many copies, and audit log rotation that should prevent log accumulation.",
+      "hint": "The backup and logs buckets grew dramatically. What automated processes should prevent this kind of accumulation?",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "compute-cost-explosion",
+      "title": "The Runaway EC2 Bills",
+      "description": "Your compute costs doubled but traffic is the same. Something is spinning up instances.",
+      "situation": "EC2 costs went from $4,000 to $8,500 this month. Traffic patterns are normal, but you're seeing charges for instance types you don't remember launching.",
+      "codeExample": "Cost by instance type:\n- t3.medium: $1,200 (normal, expected)\n- m5.large: $800 (normal, expected)  \n- c5.4xlarge: $3,200 (NEW - 8 instances running)\n- r5.8xlarge: $2,100 (NEW - 3 instances running)\n- p3.2xlarge: $1,200 (NEW - 1 instance running)\n\nAuto Scaling Groups:\n- Web tier: 4/4 instances (normal)\n- API tier: 6/6 instances (normal)\n- ML-training: 12/12 instances (unexpected!)",
+      "options": [
+        "Scale down all auto scaling groups immediately",
+        "Terminate all instances and restart them",
+        "Review auto scaling policies, check for stuck scaling events, and audit who created the ML training resources",
+        "Contact the development team to explain the charges"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Unexpected large instances suggest either auto scaling gone wrong or someone launched expensive resources. Review scaling policies for maximum limits, check CloudTrail for who created resources, and investigate the ML training group that wasn't planned.",
+      "hint": "Those expensive GPU and memory-optimized instances weren't in your original plan. Who launched them and why are they still running?",
+      "difficulty": "intermediate",
+      "points": 15
+    },
+    {
+      "id": "data-transfer-disaster",
+      "title": "The $2K Data Transfer Surprise",
+      "description": "Data transfer costs spiked from $100 to $2,000 and you need to find out why.",
+      "situation": "Your data transfer out charges exploded this month. The application functionality hasn't changed, but AWS is charging you for massive data movement.",
+      "codeExample": "Data Transfer Analysis:\n- Total transfer out: 800TB (was 50TB last month)\n- Cross-AZ transfer: $400 (normal)\n- Internet transfer: $1,600 (16x increase!)\n- CloudFront: $50 (normal)\n\nTop sources:\n- API Gateway → Internet: 600TB\n- EC2 → Internet: 150TB  \n- RDS → Internet: 50TB\n\nAPI logs show:\n- GET /api/reports/export: 12M requests\n- Average response size: 50MB (was 2MB!)",
+      "options": [
+        "Enable CloudFront for all API responses",
+        "Reduce the size of API responses",
+        "Move to a different AWS region with lower costs",
+        "Investigate the reports export endpoint, implement pagination, enable compression, and add CloudFront caching"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The export endpoint is serving 50MB responses 12M times, causing massive data transfer. Implement pagination to reduce response sizes, enable gzip compression, and cache large responses with CloudFront to minimize repeated transfers.",
+      "hint": "One API endpoint is serving massive responses millions of times. How do you reduce both the size and frequency of these transfers?",
+      "difficulty": "intermediate",
+      "points": 18
+    },
+    {
+      "id": "reserved-instance-waste",
+      "title": "The Reserved Instance Trap",
+      "description": "You bought Reserved Instances to save money but your bill is still high.",
+      "situation": "You purchased $50K worth of Reserved Instances 6 months ago expecting 40% savings, but you're still paying high on-demand charges and not seeing the expected savings.",
+      "codeExample": "Reserved Instance Utilization:\n- m5.large Reserved: 10 instances purchased\n- m5.large Usage: 3 instances average\n- Utilization: 30% (wasting $35K/year)\n\nActual Usage:\n- c5.xlarge on-demand: 8 instances (not covered)\n- t3.medium on-demand: 12 instances (not covered)\n- r5.large on-demand: 4 instances (not covered)\n\nMonthly charges:\n- Reserved (underutilized): $4,200\n- On-demand (uncovered): $6,800\n- Total: $11,000 (no savings achieved)",
+      "options": [
+        "Buy more Reserved Instances to cover all workloads",
+        "Convert all Reserved Instances to Convertible type",
+        "Wait for Reserved Instances to expire and don't buy more",
+        "Sell unused Reserved Instances on the Reserved Instance Marketplace and right-size current reservations to match actual usage patterns"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Mismatched Reserved Instances waste money. Sell unused reservations on the marketplace to recover costs, then analyze actual usage patterns and purchase correctly sized reservations that match your real workload requirements.",
+      "hint": "You bought the wrong instance types and sizes. How can you recover from this mismatch and align reservations with actual usage?",
+      "difficulty": "intermediate",
+      "points": 14
+    },
+    {
+      "id": "zombie-resource-hunt",
+      "title": "Hunting Zombie Resources",
+      "description": "Your bill has hidden costs from resources that serve no purpose but keep charging you.",
+      "situation": "After rightsizing instances, your bill is still higher than expected. There are mysterious charges for services you don't actively use, suggesting zombie resources lurking in your account.",
+      "codeExample": "Mysterious charges found:\n- NAT Gateways: $320/month (4 gateways in unused subnets)\n- Load Balancers: $180/month (3 ALBs with no targets)\n- EBS Snapshots: $450/month (500 snapshots, oldest from 2019)\n- Elastic IPs: $120/month (25 unattached IPs)\n- RDS instances: $280/month (2 stopped instances still charging for storage)\n\nTotal zombie cost: $1,350/month = $16,200/year wasted",
+      "options": [
+        "Keep everything as backup in case it's needed later",
+        "Delete only the most expensive resources",
+        "Set up cost allocation tags to track resource owners",
+        "Audit and delete unused NAT gateways, load balancers, snapshots older than 30 days, unattached EIPs, and terminate stopped RDS instances"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Zombie resources provide no value but cost money. Systematically audit and remove unused infrastructure: delete unused NAT gateways and load balancers, implement snapshot lifecycle policies, release unattached IPs, and properly terminate unused databases.",
+      "hint": "These resources are providing zero value but maximum cost. What's the systematic approach to clean house?",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "auto-scaling-cost-chaos",
+      "title": "Auto Scaling Gone Wild",
+      "description": "Your auto scaling is working too well, scaling up but never scaling down effectively.",
+      "situation": "Auto scaling keeps adding instances during traffic spikes but they don't scale down afterward, leaving you with expensive overcapacity that runs 24/7.",
+      "codeExample": "Auto Scaling Analysis:\n- Desired capacity: 15 instances\n- Min size: 2 instances  \n- Max size: 20 instances\n- Scale up policy: CPU > 70% for 2 minutes\n- Scale down policy: CPU < 30% for 10 minutes\n\nTraffic pattern:\n- 9 AM spike: scales to 15 instances\n- 11 AM: traffic drops, CPU at 25%\n- 6 PM: still running 15 instances\n- Midnight: still running 15 instances\n\nDaily cost: $480 (15 instances × $32/day)\nOptimal cost: $160 (5 instances × $32/day)",
+      "options": [
+        "Increase the scale-down threshold to 40% CPU",
+        "Reduce the scale-down cooldown period and implement more aggressive scale-down policies",
+        "Disable auto scaling completely",
+        "Set a scheduled scaling policy to force scale-down at night"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Auto scaling often scales up quickly but down slowly. Reduce cooldown periods, implement step scaling for faster scale-down, and consider target tracking policies that respond more dynamically to actual load patterns.",
+      "hint": "Scaling up is working fine, but scaling down is too conservative. How do you make it more aggressive about removing unneeded capacity?",
+      "difficulty": "beginner",
+      "points": 11
+    },
+    {
+      "id": "serverless-cost-surprise",
+      "title": "Lambda Bill Shock",
+      "description": "Your serverless costs are higher than the servers you replaced.",
+      "situation": "You migrated from EC2 to Lambda expecting cost savings, but Lambda charges are 3x higher than your previous server costs. Something is wrong with your serverless architecture.",
+      "codeExample": "Lambda cost breakdown:\n- Function executions: 500M invocations/month\n- Average duration: 2.5 seconds\n- Memory allocation: 1024MB\n- Monthly cost: $8,400\n\nPrevious EC2 setup:\n- 6 × t3.large instances\n- Monthly cost: $2,800\n\nInvestigation reveals:\n- Cold starts: 40% of invocations\n- Inefficient code: Loading 50MB of data per request\n- Wrong memory allocation: Using 200MB but allocated 1024MB\n- Recursive calls: Some functions calling themselves",
+      "options": [
+        "Optimize code to reduce execution time, right-size memory allocation, implement connection pooling, and fix recursive calling patterns",
+        "Go back to EC2 since it was cheaper",
+        "Increase Lambda memory to reduce execution time",
+        "Switch to containerized Lambda functions"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Lambda costs are driven by execution time and memory allocation. Optimize code for faster execution, allocate only needed memory, use connection pooling to reduce cold starts, and fix inefficient calling patterns that waste invocations.",
+      "hint": "Lambda charges for both time and memory. Multiple inefficiencies are compounding the costs. What systematic optimizations address all the waste?",
+      "difficulty": "advanced",
+      "points": 20
+    },
+    {
+      "id": "database-cost-creep",
+      "title": "The Expensive Database Dilemma",
+      "description": "Database costs keep growing despite stable application usage.",
+      "situation": "RDS costs increased 60% over 6 months while application load remained constant. The database seems to be consuming more resources without explanation.",
+      "codeExample": "RDS Analysis:\n- Instance type: db.r5.4xlarge ($2,800/month)\n- Storage: 2TB GP2 → 4TB GP2 ($800/month)\n- Backup storage: 1TB → 8TB ($320/month)\n- Multi-AZ: Enabled ($2,800 additional)\n\nPerformance insights:\n- CPU utilization: 85% average (was 45%)\n- Connections: 500 active (was 200)\n- Slow queries: 15,000/day (was 2,000)\n- Storage growth: 100GB/month\n\nTotal monthly cost: $6,720 (was $4,200)",
+      "options": [
+        "Upgrade to an even larger instance type",
+        "Add read replicas to distribute the load",
+        "Optimize slow queries, implement connection pooling, add database indexes, and set up automated backup lifecycle policies",
+        "Migrate to Aurora Serverless"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Database performance degradation drives up costs. Optimize slow queries that cause high CPU usage, implement connection pooling to reduce connection overhead, add missing indexes, and manage backup retention to control storage costs.",
+      "hint": "The database is working harder than before for the same workload. What underlying issues could cause this performance degradation?",
+      "difficulty": "intermediate",
+      "points": 16
+    },
+    {
+      "id": "multi-cloud-cost-mystery",
+      "title": "The Multi-Cloud Money Pit",
+      "description": "Your multi-cloud strategy is costing more than single-cloud, and you need to optimize across providers.",
+      "situation": "You're running workloads across AWS, Azure, and GCP for redundancy, but the total bill is 2.5x what single-cloud would cost. Cross-cloud data transfer and management overhead are killing your budget.",
+      "codeExample": "Multi-cloud costs:\n- AWS: $12,000/month (primary)\n- Azure: $8,000/month (secondary)\n- GCP: $6,000/month (analytics)\n- Cross-cloud transfer: $2,500/month\n- Management tools: $1,500/month\n- Total: $30,000/month\n\nSingle-cloud estimate: $12,000/month\n\nData flows:\n- AWS → Azure: 200TB/month ($2,000)\n- Azure → GCP: 50TB/month ($500)\n- Daily sync jobs: Massive data movement\n- Duplicate storage: Same data in 3 clouds",
+      "options": [
+        "Consolidate everything to the cheapest cloud provider",
+        "Reduce data transfer by implementing regional data residency, optimizing sync frequencies, and using cloud-native analytics tools",
+        "Keep current setup for maximum redundancy",
+        "Use only one cloud for storage and others for compute"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Multi-cloud data transfer costs can be minimized by keeping data regional, reducing sync frequency to business needs, using native analytics services instead of moving data, and implementing intelligent data tiering strategies.",
+      "hint": "The cross-cloud data transfer is a major cost driver. How do you maintain multi-cloud benefits while minimizing data movement?",
+      "difficulty": "advanced",
+      "points": 22
+    },
+    {
+      "id": "cost-allocation-chaos",
+      "title": "The Billing Black Hole",
+      "description": "You can't figure out which team or project is responsible for escalating costs.",
+      "situation": "Your AWS bill hit $25K this month (up from $18K), but you can't identify which team or project caused the increase. Cost allocation is a mess and finger-pointing has begun.",
+      "codeExample": "Current tagging coverage:\n- 60% of resources have no tags\n- 25% have inconsistent tag formats\n- 15% have proper cost allocation tags\n\nCost breakdown by service:\n- EC2: $12,000 (40 instances, unknown owners)\n- RDS: $6,000 (12 databases, unknown purpose)\n- S3: $4,000 (200 buckets, mixed naming)\n- Other: $3,000 (various services)\n\nTeam claims:\n- Frontend team: \"We only use small instances\"\n- Backend team: \"Our costs are stable\"\n- Data team: \"We shut down our big instances\"\n- DevOps: \"We're investigating\"",
+      "options": [
+        "Split the bill equally among all teams",
+        "Track costs manually using spreadsheets",
+        "Implement comprehensive tagging strategy, use Cost Categories, set up billing alerts per team, and require tags for resource creation",
+        "Blame the team with the most resources"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Cost allocation requires systematic tagging, Cost Categories for grouping, team-specific billing alerts, and governance policies that enforce tagging at resource creation time. This provides visibility and accountability for cloud spending.",
+      "hint": "You can't manage what you can't measure. What systematic approach provides visibility into who's spending what?",
+      "difficulty": "beginner",
+      "points": 13
+    }
+  ]
+}

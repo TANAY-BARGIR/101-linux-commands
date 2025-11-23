@@ -1,0 +1,211 @@
+{
+  "id": "gitops-argocd-deployment",
+  "title": "GitOps with ArgoCD - Automated Kubernetes Deployments",
+  "description": "Implement GitOps workflows using ArgoCD for automated, declarative, and auditable Kubernetes application deployments.",
+  "category": {
+    "name": "GitOps",
+    "slug": "gitops"
+  },
+  "difficulty": "advanced",
+  "estimatedTime": "120 minutes",
+  "technologies": ["ArgoCD", "GitOps", "Kubernetes", "Git", "YAML"],
+  "prerequisites": [
+    "Kubernetes cluster access",
+    "Git repository access",
+    "kubectl configured",
+    "Understanding of Kubernetes resources"
+  ],
+  "learningObjectives": [
+    "Understand GitOps principles and benefits",
+    "Install and configure ArgoCD",
+    "Create GitOps application configurations",
+    "Implement automated deployment pipelines",
+    "Configure multi-environment deployments",
+    "Set up monitoring and alerting for GitOps workflows"
+  ],
+  "environment": "local",
+  "icon": "GitBranch",
+  "publishedAt": "2024-12-01T16:00:00Z",
+  "author": {
+    "name": "DevOps Daily Team",
+    "slug": "devops-daily-team"
+  },
+  "tags": ["GitOps", "ArgoCD", "Kubernetes", "CI/CD", "Automation"],
+  "steps": [
+    {
+      "id": "argocd-installation",
+      "title": "Install and Configure ArgoCD",
+      "description": "Deploy ArgoCD to Kubernetes cluster and configure initial access and authentication.",
+      "codeExample": "# Create namespace and install ArgoCD\nkubectl create namespace argocd\nkubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml\n\n# Wait for pods to be ready\nkubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd\n\n# Get initial admin password\nkubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=\"{.data.password}\" | base64 -d\n\n# Port forward to access ArgoCD UI\nkubectl port-forward svc/argocd-server -n argocd 8080:443 &\n\n# Install ArgoCD CLI\ncurl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64\nsudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd\nrm argocd-linux-amd64\n\n# Login via CLI\nargocd login localhost:8080 --username admin --password <initial-password> --insecure\n\n# Change admin password\nargocd account update-password --current-password <initial-password> --new-password admin123",
+      "commands": [
+        "kubectl create namespace argocd",
+        "kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml",
+        "kubectl get pods -n argocd",
+        "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d && echo"
+      ],
+      "validationCriteria": [
+        "ArgoCD namespace is created",
+        "All ArgoCD pods are running",
+        "ArgoCD server is accessible via port-forward",
+        "CLI authentication works"
+      ],
+      "hints": [
+        "Wait for all pods to be ready before accessing UI",
+        "Save the initial admin password for first login",
+        "Use --insecure flag for self-signed certificates"
+      ]
+    },
+    {
+      "id": "gitops-repository",
+      "title": "Set Up GitOps Repository Structure",
+      "description": "Create a Git repository with proper structure for GitOps deployments and multiple environments.",
+      "codeExample": "# Create GitOps repository structure\nmkdir gitops-demo && cd gitops-demo\ngit init\n\n# Create directory structure\nmkdir -p {\nappconfigs/guestbook/{base,overlays/{dev,staging,prod}},\nprojects,\napplications,\ninfrastructure/{namespaces,rbac}\n}\n\n# Base application manifests\n# appconfigs/guestbook/base/deployment.yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: guestbook\n  labels:\n    app: guestbook\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: guestbook\n  template:\n    metadata:\n      labels:\n        app: guestbook\n    spec:\n      containers:\n      - name: guestbook\n        image: gcr.io/heptio-images/ks-guestbook-demo:0.1\n        ports:\n        - containerPort: 3000\n        env:\n        - name: PORT\n          value: \"3000\"\n\n# appconfigs/guestbook/base/service.yaml\napiVersion: v1\nkind: Service\nmetadata:\n  name: guestbook\n  labels:\n    app: guestbook\nspec:\n  selector:\n    app: guestbook\n  ports:\n  - port: 80\n    targetPort: 3000\n  type: ClusterIP\n\n# appconfigs/guestbook/base/kustomization.yaml\napiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nresources:\n- deployment.yaml\n- service.yaml\ncommonLabels:\n  app: guestbook\n  version: base",
+      "commands": [
+        "git init gitops-demo",
+        "cd gitops-demo",
+        "mkdir -p appconfigs/guestbook/{base,overlays/{dev,staging,prod}}",
+        "mkdir -p {projects,applications,infrastructure/{namespaces,rbac}}",
+        "tree . || find . -type d"
+      ],
+      "validationCriteria": [
+        "Repository structure is created correctly",
+        "Base Kubernetes manifests are valid",
+        "Kustomization files are properly configured"
+      ],
+      "expectedOutput": "Well-structured GitOps repository with application configurations"
+    },
+    {
+      "id": "multi-environment-config",
+      "title": "Configure Multi-Environment Deployments",
+      "description": "Set up environment-specific configurations using Kustomize overlays for dev, staging, and production.",
+      "codeExample": "# Development overlay\n# appconfigs/guestbook/overlays/dev/kustomization.yaml\napiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nnamespace: guestbook-dev\nresources:\n- ../../base\npatchesStrategicMerge:\n- deployment-patch.yaml\ncommonLabels:\n  environment: dev\nimages:\n- name: gcr.io/heptio-images/ks-guestbook-demo\n  newTag: \"0.2\"\n\n# appconfigs/guestbook/overlays/dev/deployment-patch.yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: guestbook\nspec:\n  replicas: 1\n  template:\n    spec:\n      containers:\n      - name: guestbook\n        resources:\n          requests:\n            memory: \"64Mi\"\n            cpu: \"50m\"\n          limits:\n            memory: \"128Mi\"\n            cpu: \"100m\"\n\n# Staging overlay\n# appconfigs/guestbook/overlays/staging/kustomization.yaml\napiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nnamespace: guestbook-staging\nresources:\n- ../../base\npatchesStrategicMerge:\n- deployment-patch.yaml\n- service-patch.yaml\ncommonLabels:\n  environment: staging\nimages:\n- name: gcr.io/heptio-images/ks-guestbook-demo\n  newTag: \"0.2\"\n\n# appconfigs/guestbook/overlays/staging/service-patch.yaml\napiVersion: v1\nkind: Service\nmetadata:\n  name: guestbook\nspec:\n  type: NodePort\n\n# Production overlay\n# appconfigs/guestbook/overlays/prod/kustomization.yaml\napiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nnamespace: guestbook-prod\nresources:\n- ../../base\npatchesStrategicMerge:\n- deployment-patch.yaml\n- ingress.yaml\ncommonLabels:\n  environment: production\nimages:\n- name: gcr.io/heptio-images/ks-guestbook-demo\n  newTag: \"0.1\"\n\n# appconfigs/guestbook/overlays/prod/deployment-patch.yaml\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: guestbook\nspec:\n  replicas: 5\n  template:\n    spec:\n      containers:\n      - name: guestbook\n        resources:\n          requests:\n            memory: \"128Mi\"\n            cpu: \"100m\"\n          limits:\n            memory: \"256Mi\"\n            cpu: \"200m\"",
+      "commands": [
+        "kustomize build appconfigs/guestbook/overlays/dev",
+        "kustomize build appconfigs/guestbook/overlays/staging",
+        "kustomize build appconfigs/guestbook/overlays/prod",
+        "git add .",
+        "git commit -m 'Initial GitOps repository setup'"
+      ],
+      "validationCriteria": [
+        "Each environment has specific configurations",
+        "Kustomize builds generate valid manifests",
+        "Resource requirements differ per environment",
+        "Image tags are environment-appropriate"
+      ],
+      "hints": [
+        "Use different replica counts for each environment",
+        "Adjust resource limits based on environment needs",
+        "Production should have more replicas and resources"
+      ]
+    },
+    {
+      "id": "argocd-applications",
+      "title": "Create ArgoCD Application Configurations",
+      "description": "Define ArgoCD applications to manage deployments across multiple environments with GitOps.",
+      "codeExample": "# Create namespaces first\n# infrastructure/namespaces/dev-namespace.yaml\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: guestbook-dev\n  labels:\n    environment: dev\n---\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: guestbook-staging\n  labels:\n    environment: staging\n---\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: guestbook-prod\n  labels:\n    environment: production\n\n# ArgoCD Project\n# projects/guestbook-project.yaml\napiVersion: argoproj.io/v1alpha1\nkind: AppProject\nmetadata:\n  name: guestbook\n  namespace: argocd\nspec:\n  description: Guestbook application project\n  sourceRepos:\n  - 'https://github.com/your-username/gitops-demo'\n  destinations:\n  - namespace: 'guestbook-*'\n    server: https://kubernetes.default.svc\n  clusterResourceWhitelist:\n  - group: ''\n    kind: Namespace\n  namespaceResourceWhitelist:\n  - group: ''\n    kind: '*'\n  - group: 'apps'\n    kind: '*'\n  - group: 'extensions'\n    kind: '*'\n\n# Development Application\n# applications/guestbook-dev.yaml\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: guestbook-dev\n  namespace: argocd\n  labels:\n    environment: dev\nspec:\n  project: guestbook\n  source:\n    repoURL: https://github.com/your-username/gitops-demo\n    targetRevision: HEAD\n    path: appconfigs/guestbook/overlays/dev\n  destination:\n    server: https://kubernetes.default.svc\n    namespace: guestbook-dev\n  syncPolicy:\n    automated:\n      prune: true\n      selfHeal: true\n    syncOptions:\n    - CreateNamespace=true\n    retry:\n      limit: 2\n      backoff:\n        duration: 5s\n        factor: 2\n        maxDuration: 3m\n\n# Staging Application (manual sync)\n# applications/guestbook-staging.yaml\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: guestbook-staging\n  namespace: argocd\n  labels:\n    environment: staging\nspec:\n  project: guestbook\n  source:\n    repoURL: https://github.com/your-username/gitops-demo\n    targetRevision: HEAD\n    path: appconfigs/guestbook/overlays/staging\n  destination:\n    server: https://kubernetes.default.svc\n    namespace: guestbook-staging\n  syncPolicy:\n    syncOptions:\n    - CreateNamespace=true\n\n# Production Application (manual sync with additional safety)\n# applications/guestbook-prod.yaml\napiVersion: argoproj.io/v1alpha1\nkind: Application\nmetadata:\n  name: guestbook-prod\n  namespace: argocd\n  labels:\n    environment: production\n  annotations:\n    argocd.argoproj.io/sync-options: PruneLast=true\nspec:\n  project: guestbook\n  source:\n    repoURL: https://github.com/your-username/gitops-demo\n    targetRevision: release\n    path: appconfigs/guestbook/overlays/prod\n  destination:\n    server: https://kubernetes.default.svc\n    namespace: guestbook-prod\n  syncPolicy:\n    syncOptions:\n    - CreateNamespace=true\n    - PruneLast=true",
+      "commands": [
+        "kubectl apply -f infrastructure/namespaces/",
+        "kubectl apply -f projects/guestbook-project.yaml",
+        "kubectl apply -f applications/",
+        "argocd app list",
+        "argocd app get guestbook-dev"
+      ],
+      "validationCriteria": [
+        "ArgoCD project is created successfully",
+        "Applications are defined for all environments",
+        "Dev environment has automated sync enabled",
+        "Staging and prod require manual sync approval"
+      ],
+      "expectedOutput": "ArgoCD applications managing deployments across multiple environments"
+    },
+    {
+      "id": "gitops-workflow",
+      "title": "Implement GitOps Workflow and Testing",
+      "description": "Test the complete GitOps workflow by making changes to the repository and observing automated deployments.",
+      "codeExample": "# Test GitOps workflow\n\n# 1. Make a change to the application\n# Update appconfigs/guestbook/base/deployment.yaml\n# Change image tag or add environment variable\n\n# 2. Create a new feature branch\ngit checkout -b feature/update-app\n\n# Edit deployment to add environment variable\ncat << EOF >> appconfigs/guestbook/base/deployment.yaml\n        env:\n        - name: PORT\n          value: \"3000\"\n        - name: ENVIRONMENT\n          value: \"gitops-demo\"\nEOF\n\n# 3. Commit and push changes\ngit add .\ngit commit -m \"Add environment variable to guestbook\"\ngit push origin feature/update-app\n\n# 4. Merge to main (simulating PR merge)\ngit checkout main\ngit merge feature/update-app\ngit push origin main\n\n# 5. Watch ArgoCD sync the changes\nargocd app sync guestbook-dev\nargocd app wait guestbook-dev --timeout 300\n\n# 6. Verify deployment\nkubectl get pods -n guestbook-dev\nkubectl describe deployment guestbook -n guestbook-dev\n\n# 7. Manually sync staging and production\nargocd app sync guestbook-staging\nargocd app sync guestbook-prod\n\n# 8. Rollback test\n# Create a breaking change\necho \"invalid yaml\" >> appconfigs/guestbook/base/deployment.yaml\ngit add . && git commit -m \"Breaking change for rollback test\"\ngit push origin main\n\n# 9. Observe ArgoCD detect the issue and rollback\nargocd app history guestbook-dev\nargocd app rollback guestbook-dev <previous-revision>",
+      "commands": [
+        "git status",
+        "git log --oneline",
+        "argocd app sync guestbook-dev",
+        "kubectl get pods -n guestbook-dev -w",
+        "argocd app diff guestbook-dev",
+        "argocd app history guestbook-dev"
+      ],
+      "validationCriteria": [
+        "Git changes trigger ArgoCD sync in dev",
+        "Application updates are deployed successfully",
+        "Manual sync works for staging/production",
+        "Rollback functionality works correctly",
+        "Health checks show application status"
+      ],
+      "hints": [
+        "Use 'argocd app wait' to monitor sync completion",
+        "Check application health in ArgoCD UI",
+        "Use 'kubectl describe' to troubleshoot issues"
+      ]
+    },
+    {
+      "id": "monitoring-alerts",
+      "title": "Configure Monitoring and Alerting for GitOps",
+      "description": "Set up monitoring, notifications, and alerting for ArgoCD operations and application deployments.",
+      "codeExample": "# ArgoCD Notifications Configuration\n# Create notification configuration\nkubectl create configmap argocd-notifications-cm -n argocd --from-literal=config.yaml='\napi:\n  slack:\n    token: $slack-token\nsubscriptions:\n  - recipients:\n    - slack:devops-alerts\n    triggers:\n    - on-sync-failed\n    - on-sync-succeeded\n    - on-health-degraded\ntemplates:\n  template.app-sync-succeeded: |\n    email:\n      subject: Application {{.app.metadata.name}} synced successfully\n    message: |\n      Application {{.app.metadata.name}} is now running new version.\n      Repository: {{.app.spec.source.repoURL}}\n      Revision: {{.app.status.sync.revision}}\n  template.app-sync-failed: |\n    email:\n      subject: Failed to sync application {{.app.metadata.name}}\n    message: |\n      The sync operation of application {{.app.metadata.name}} has failed.\n      Repository: {{.app.spec.source.repoURL}}\n      Error: {{.app.status.operationState.message}}\ntriggers:\n  trigger.on-sync-succeeded: |\n    - when: app.status.sync.status == \"Synced\"\n      send: [app-sync-succeeded]\n  trigger.on-sync-failed: |\n    - when: app.status.sync.status == \"Failed\"\n      send: [app-sync-failed]\n'\n\n# Create secret for Slack token\nkubectl create secret generic argocd-notifications-secret \\\n  --from-literal=slack-token=xoxb-your-slack-token -n argocd\n\n# Enable notifications controller\nkubectl patch configmap argocd-cmd-params-cm -n argocd \\\n  --patch '{\"data\":{\"notifications.controller.enabled\":\"true\"}}'\n\n# Restart ArgoCD to pick up changes\nkubectl rollout restart deployment argocd-server -n argocd\nkubectl rollout restart deployment argocd-notifications-controller -n argocd\n\n# Add annotations to applications for notifications\nkubectl annotate application guestbook-dev \\\n  notifications.argoproj.io/subscribe.on-sync-succeeded.slack=devops-alerts -n argocd\n\nkubectl annotate application guestbook-staging \\\n  notifications.argoproj.io/subscribe.on-sync-failed.slack=devops-alerts -n argocd\n\n# Prometheus monitoring for ArgoCD\n# Add ServiceMonitor for ArgoCD metrics\napiVersion: monitoring.coreos.com/v1\nkind: ServiceMonitor\nmetadata:\n  name: argocd-metrics\n  namespace: argocd\n  labels:\n    app: argocd-metrics\nspec:\n  selector:\n    matchLabels:\n      app.kubernetes.io/name: argocd-metrics\n  endpoints:\n  - port: metrics\n    interval: 30s\n    path: /metrics\n\n# Grafana Dashboard for ArgoCD\n# Sample PromQL queries for ArgoCD monitoring:\n# - argocd_app_health_status\n# - argocd_app_sync_total\n# - argocd_cluster_connection_status\n# - argocd_app_reconcile_duration",
+      "commands": [
+        "kubectl get configmap argocd-notifications-cm -n argocd -o yaml",
+        "kubectl get pods -n argocd | grep notifications",
+        "kubectl logs -f deployment/argocd-notifications-controller -n argocd",
+        "argocd app sync guestbook-dev --dry-run",
+        "kubectl get applications -n argocd -o wide"
+      ],
+      "validationCriteria": [
+        "ArgoCD notifications are configured",
+        "Slack/email notifications work for sync events",
+        "Prometheus metrics are exposed",
+        "Application health status is monitored",
+        "Alerts fire for failed syncs"
+      ],
+      "expectedOutput": "Complete monitoring and alerting setup for GitOps operations",
+      "hints": [
+        "Test notifications with a failed sync scenario",
+        "Use ArgoCD CLI to trigger manual syncs for testing",
+        "Monitor ArgoCD controller logs for troubleshooting"
+      ]
+    }
+  ],
+  "completionCriteria": [
+    "ArgoCD is installed and accessible",
+    "GitOps repository structure follows best practices",
+    "Multi-environment deployments work correctly",
+    "Automated sync works for development environment",
+    "Manual approval process works for staging/production",
+    "Monitoring and alerting are configured and functional"
+  ],
+  "resources": [
+    {
+      "title": "ArgoCD Documentation",
+      "url": "https://argo-cd.readthedocs.io/",
+      "type": "documentation",
+      "external": true
+    },
+    {
+      "title": "GitOps Principles",
+      "url": "https://www.gitops.tech/",
+      "type": "tutorial",
+      "external": true
+    }
+  ],
+  "troubleshooting": [
+    {
+      "issue": "ArgoCD application shows OutOfSync status",
+      "solution": "Check git repository access, verify Kustomize builds, and ensure target namespace exists"
+    },
+    {
+      "issue": "Sync operation fails with permission errors",
+      "solution": "Verify RBAC permissions, check ArgoCD project settings, and ensure service account has required permissions"
+    },
+    {
+      "issue": "Notifications not sending",
+      "solution": "Verify notification controller is running, check secret values, and validate webhook/email configurations"
+    }
+  ],
+  "featured": true
+}

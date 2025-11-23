@@ -1,0 +1,203 @@
+{
+  "id": "python-quiz",
+  "title": "Python Fundamentals Quiz",
+  "description": "Master Python through real-world scenarios covering syntax, data structures, OOP, and advanced concepts",
+  "category": "Python",
+  "icon": "Code",
+  "totalPoints": 125,
+  "theme": {
+    "primaryColor": "green",
+    "gradientFrom": "from-green-500",
+    "gradientTo": "to-emerald-600"
+  },
+  "metadata": {
+    "estimatedTime": "20-25 minutes",
+    "difficultyLevels": {
+      "beginner": 4,
+      "intermediate": 4,
+      "advanced": 2
+    }
+  },
+  "questions": [
+    {
+      "id": "list-comprehension-basics",
+      "title": "List Comprehensions vs Loops",
+      "description": "Choose the most Pythonic way to filter and transform data.",
+      "situation": "You have a list of numbers and need to create a new list containing only the squares of even numbers.",
+      "codeExample": "numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n# Goal: [4, 16, 36, 64, 100]",
+      "options": [
+        "result = [num ** 2 for num in numbers if num % 2 == 0]",
+        "result = []\nfor num in numbers:\n    if num % 2 == 0:\n        result.append(num ** 2)\nreturn result",
+        "result = list(map(lambda x: x**2, filter(lambda x: x%2==0, numbers)))",
+        "result = []\nfor i in range(len(numbers)):\n    if numbers[i] % 2 == 0:\n        result.append(numbers[i] ** 2)"
+      ],
+      "correctAnswer": 0,
+      "explanation": "List comprehensions are the most Pythonic way to create lists. They're readable, efficient, and concise while maintaining clarity about the operation being performed.",
+      "hint": "Think about Python's philosophy: 'Simple is better than complex.' Which approach is most readable and concise?",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "dictionary-methods",
+      "title": "Safe Dictionary Access",
+      "description": "How do you safely access dictionary values that might not exist?",
+      "situation": "You're processing user data where some users might not have an 'email' field, and you want to avoid KeyError exceptions.",
+      "codeExample": "user_data = {'name': 'Alice', 'age': 30}\n# Need to get email safely, return 'No email' if missing",
+      "options": [
+        "email = user_data['email'] if 'email' in user_data else 'No email'",
+        "try:\n    email = user_data['email']\nexcept KeyError:\n    email = 'No email'",
+        "if user_data.has_key('email'):\n    email = user_data['email']\nelse:\n    email = 'No email'",
+        "email = user_data.get('email', 'No email')"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The .get() method is the most Pythonic way to safely access dictionary values with a default fallback. It's concise, readable, and handles missing keys gracefully.",
+      "hint": "What dictionary method is specifically designed for safe key access with default values?",
+      "difficulty": "beginner",
+      "points": 8
+    },
+    {
+      "id": "string-formatting",
+      "title": "Modern String Formatting",
+      "description": "What's the best way to format strings in modern Python?",
+      "situation": "You need to create a user greeting message with their name and account balance formatted as currency.",
+      "codeExample": "name = \"Bob\"\nbalance = 1234.56\n# Goal: \"Hello Bob, your balance is $1,234.56\"",
+      "options": [
+        "message = \"Hello \" + name + \", your balance is $\" + str(balance)",
+        "message = \"Hello %s, your balance is $%.2f\" % (name, balance)",
+        "message = \"Hello {}, your balance is ${:,.2f}\".format(name, balance)",
+        "message = f\"Hello {name}, your balance is ${balance:,.2f}\""
+      ],
+      "correctAnswer": 3,
+      "explanation": "F-strings (formatted string literals) are the most modern, readable, and efficient way to format strings in Python 3.6+. They allow inline expressions and formatting specifiers.",
+      "hint": "Which formatting method was introduced in Python 3.6 and is considered the most readable?",
+      "difficulty": "beginner",
+      "points": 10
+    },
+    {
+      "id": "exception-handling",
+      "title": "Proper Exception Handling",
+      "description": "How should you handle exceptions when reading a file?",
+      "situation": "You need to read a configuration file, but it might not exist or be corrupted. You want to handle errors gracefully.",
+      "codeExample": "# Need to read 'config.json' safely\n# Return empty dict if file issues occur",
+      "options": [
+        "try:\n    with open('config.json') as f:\n        return json.load(f)\nexcept:\n    return {}",
+        "try:\n    with open('config.json') as f:\n        return json.load(f)\nexcept Exception as e:\n    print(f\"Error: {e}\")\n    return {}",
+        "try:\n    with open('config.json') as f:\n        return json.load(f)\nexcept (FileNotFoundError, json.JSONDecodeError) as e:\n    logger.warning(f\"Config file error: {e}\")\n    return {}",
+        "if os.path.exists('config.json'):\n    with open('config.json') as f:\n        return json.load(f)\nelse:\n    return {}"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Catch specific exceptions rather than using bare 'except' clauses. This allows for proper error handling while not masking unexpected errors. Using logging is also a best practice.",
+      "hint": "It's better to catch specific exceptions rather than all exceptions. What could go wrong when reading and parsing a JSON file?",
+      "difficulty": "beginner",
+      "points": 12
+    },
+    {
+      "id": "class-design",
+      "title": "Object-Oriented Design",
+      "description": "Design a class for representing a bank account with proper encapsulation.",
+      "situation": "You need a BankAccount class that protects the balance from direct modification and validates transactions.",
+      "codeExample": "# Requirements:\n# - Private balance attribute\n# - Deposit/withdraw methods with validation\n# - Read-only balance property",
+      "options": [
+        "class BankAccount:\n    def __init__(self, initial_balance=0):\n        self.balance = initial_balance\n    \n    def deposit(self, amount):\n        self.balance += amount\n    \n    def withdraw(self, amount):\n        self.balance -= amount",
+        "class BankAccount:\n    def __init__(self, initial_balance=0):\n        self._balance = initial_balance\n    \n    @property\n    def balance(self):\n        return self._balance\n    \n    def deposit(self, amount):\n        if amount > 0:\n            self._balance += amount\n    \n    def withdraw(self, amount):\n        if 0 < amount <= self._balance:\n            self._balance -= amount",
+        "class BankAccount:\n    def __init__(self, initial_balance=0):\n        self.__balance = initial_balance\n    \n    def get_balance(self):\n        return self.__balance\n    \n    def set_balance(self, amount):\n        self.__balance = amount",
+        "class BankAccount:\n    balance = 0\n    \n    def deposit(self, amount):\n        BankAccount.balance += amount"
+      ],
+      "correctAnswer": 1,
+      "explanation": "This design uses a protected attribute (_balance), a property for read-only access, and proper validation in methods. It follows Python conventions and encapsulation principles.",
+      "hint": "Consider encapsulation, validation, and Python property decorators. How do you make an attribute read-only while keeping methods safe?",
+      "difficulty": "intermediate",
+      "points": 15
+    },
+    {
+      "id": "generator-usage",
+      "title": "Memory-Efficient Data Processing",
+      "description": "How do you process a large file without loading it entirely into memory?",
+      "situation": "You need to process a 10GB log file line by line, extracting error messages, without consuming excessive memory.",
+      "codeExample": "# Large file: server.log (10GB)\n# Goal: Extract lines containing 'ERROR' efficiently",
+      "options": [
+        "with open('server.log') as f:\n    lines = f.readlines()\n    errors = [line for line in lines if 'ERROR' in line]\n    return errors",
+        "def get_errors():\n    with open('server.log') as f:\n        for line in f:\n            if 'ERROR' in line:\n                yield line.strip()\n\nerrors = list(get_errors())",
+        "def get_errors():\n    with open('server.log') as f:\n        for line in f:\n            if 'ERROR' in line:\n                yield line.strip()\n\n# Process one at a time\nfor error in get_errors():\n    process_error(error)",
+        "import pandas as pd\ndf = pd.read_csv('server.log', sep='\\n')\nerrors = df[df[0].str.contains('ERROR')]"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Using a generator function with yield creates a memory-efficient iterator that processes one line at a time. This approach can handle files of any size without memory issues.",
+      "hint": "Think about memory usage. Which approach processes data one piece at a time rather than loading everything into memory?",
+      "difficulty": "intermediate",
+      "points": 15
+    },
+    {
+      "id": "context-managers",
+      "title": "Resource Management",
+      "description": "How do you ensure proper cleanup of resources in Python?",
+      "situation": "You need to connect to a database, perform operations, and guarantee the connection is closed even if errors occur.",
+      "codeExample": "# Need to:\n# 1. Connect to database\n# 2. Execute queries\n# 3. Ensure connection closes properly",
+      "options": [
+        "conn = database.connect()\ntry:\n    result = conn.execute(query)\n    return result\nfinally:\n    conn.close()",
+        "with database.connect() as conn:\n    result = conn.execute(query)\n    return result",
+        "conn = database.connect()\nresult = conn.execute(query)\nconn.close()\nreturn result",
+        "try:\n    conn = database.connect()\n    result = conn.execute(query)\n    conn.close()\n    return result\nexcept Exception:\n    conn.close()\n    raise"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Context managers (with statements) automatically handle resource cleanup through __enter__ and __exit__ methods. They guarantee cleanup even if exceptions occur.",
+      "hint": "What Python feature automatically handles resource cleanup and follows the principle 'with great power comes great responsibility'?",
+      "difficulty": "intermediate",
+      "points": 13
+    },
+    {
+      "id": "decorators-practical",
+      "title": "Function Decorators",
+      "description": "How do you add timing functionality to multiple functions without repeating code?",
+      "situation": "You want to measure execution time for several functions in your application for performance monitoring.",
+      "codeExample": "# Need to time these functions:\ndef calculate_stats(data): ...\ndef process_data(data): ...\ndef generate_report(data): ...",
+      "options": [
+        "import time\n\ndef calculate_stats(data):\n    start = time.time()\n    # function logic\n    end = time.time()\n    print(f\"Took {end-start:.2f}s\")",
+        "import time\nfrom functools import wraps\n\ndef timing_decorator(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        start = time.time()\n        result = func(*args, **kwargs)\n        end = time.time()\n        print(f\"{func.__name__} took {end-start:.2f}s\")\n        return result\n    return wrapper\n\n@timing_decorator\ndef calculate_stats(data): ...",
+        "class Timer:\n    def __init__(self, func):\n        self.func = func\n    \n    def __call__(self, *args):\n        # timing logic\n        return self.func(*args)",
+        "def time_function(func, *args):\n    start = time.time()\n    result = func(*args)\n    end = time.time()\n    return result, end-start"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Decorators provide a clean, reusable way to add functionality to functions. Using @wraps preserves the original function's metadata, and the decorator can be applied to any function.",
+      "hint": "What Python feature allows you to modify or extend function behavior without changing the function itself?",
+      "difficulty": "intermediate",
+      "points": 18
+    },
+    {
+      "id": "async-programming",
+      "title": "Asynchronous Programming",
+      "description": "How do you efficiently handle multiple concurrent API calls?",
+      "situation": "You need to fetch data from 10 different APIs. Sequential calls take 20 seconds total, but you want to make them concurrent.",
+      "codeExample": "import asyncio\nimport aiohttp\n\nurls = ['api1.com', 'api2.com', ...] # 10 URLs\n# Goal: Fetch all concurrently",
+      "options": [
+        "import requests\n\nresults = []\nfor url in urls:\n    response = requests.get(url)\n    results.append(response.json())",
+        "import threading\nimport requests\n\ndef fetch_url(url):\n    return requests.get(url).json()\n\nwith ThreadPoolExecutor() as executor:\n    results = list(executor.map(fetch_url, urls))",
+        "async def fetch_url(session, url):\n    async with session.get(url) as response:\n        return await response.json()\n\nasync def fetch_all():\n    async with aiohttp.ClientSession() as session:\n        tasks = [fetch_url(session, url) for url in urls]\n        return await asyncio.gather(*tasks)\n\nresults = asyncio.run(fetch_all())",
+        "import multiprocessing\n\ndef fetch_url(url):\n    return requests.get(url).json()\n\nwith multiprocessing.Pool() as pool:\n    results = pool.map(fetch_url, urls)"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Async/await with aiohttp is ideal for I/O-bound operations like API calls. It's more efficient than threading for this use case and handles concurrency elegantly with asyncio.gather().",
+      "hint": "For I/O-bound operations like network requests, which concurrency approach is most efficient and doesn't create new threads or processes?",
+      "difficulty": "advanced",
+      "points": 22
+    },
+    {
+      "id": "metaclass-usage",
+      "title": "Advanced Class Behavior",
+      "description": "How do you automatically track all instances of a class?",
+      "situation": "You want to keep track of all User objects created in your application for debugging purposes, without modifying each User instantiation.",
+      "codeExample": "# Goal: Automatically track all User instances\n# Without adding tracking code to each User() call",
+      "options": [
+        "class User:\n    instances = []\n    \n    def __init__(self, name):\n        self.name = name\n        User.instances.append(self)",
+        "class User:\n    _instances = []\n    \n    def __new__(cls, *args, **kwargs):\n        instance = super().__new__(cls)\n        cls._instances.append(instance)\n        return instance\n    \n    def __init__(self, name):\n        self.name = name",
+        "class InstanceTracker(type):\n    def __init__(cls, name, bases, attrs):\n        super().__init__(name, bases, attrs)\n        cls._instances = []\n    \n    def __call__(cls, *args, **kwargs):\n        instance = super().__call__(*args, **kwargs)\n        cls._instances.append(instance)\n        return instance\n\nclass User(metaclass=InstanceTracker):\n    def __init__(self, name):\n        self.name = name",
+        "import weakref\n\nclass User:\n    _instances = weakref.WeakSet()\n    \n    def __init__(self, name):\n        self.name = name\n        self.__class__._instances.add(self)"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Using __new__ method provides clean automatic instance tracking without requiring metaclasses. It intercepts object creation and is simpler than metaclasses for this use case.",
+      "hint": "Think about the object creation process. Which special method is called before __init__ and can intercept instance creation?",
+      "difficulty": "advanced",
+      "points": 25
+    }
+  ]
+}
