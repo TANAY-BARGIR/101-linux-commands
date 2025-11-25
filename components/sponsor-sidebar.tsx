@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Clock, Sparkles, ExternalLink } from 'lucide-react';
+import { CarbonAds } from '@/components/carbon-ads';
 
 const sponsors = [
   {
@@ -101,6 +102,8 @@ export function SponsorSidebar({ className, relatedPosts = [] }: SponsorSidebarP
         </div>
       </div>
 
+      {/* Carbon Ads Section */}
+      <CarbonAds />
       {/* Newsletter Subscription Section */}
       <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
         <h3 className="font-semibold text-sm mb-2">Stay Updated</h3>
