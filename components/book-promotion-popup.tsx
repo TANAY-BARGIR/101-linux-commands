@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BookOpen, X, Sparkles, Gift, Zap, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Confetti from 'react-confetti'
 
 export function BookPromotionPopup() {
   const [isVisible, setIsVisible] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [email, setEmail] = useState('')
   const [showThankYou, setShowThankYou] = useState(false)
+  const [showConfetti, setShowConfetti] = useState(false)
 
   useEffect(() => {
     // Check if user has already dismissed or subscribed
@@ -24,13 +26,25 @@ export function BookPromotionPopup() {
     const timer = setTimeout(() => {
       setIsVisible(true)
       // Small delay for animation
-      setTimeout(() => setIsLoaded(true), 100)
+      setTimeout(() => {
+        setIsLoaded(true)
+        // Trigger confetti after popup loads
+        setTimeout(() => {
+          setShowConfetti(true)
+          // Stop confetti after 5 seconds
+          setTimeout(() => setShowConfetti(false), 5000)
+        }, 600)
+      }, 100)
     }, 10000)
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      setShowConfetti(false)
+    }
   }, [])
 
   const handleDismiss = () => {
+    setShowConfetti(false)
     setIsLoaded(false)
     setTimeout(() => {
       setIsVisible(false)
@@ -56,8 +70,12 @@ export function BookPromotionPopup() {
     setShowThankYou(true)
     localStorage.setItem('book-promo-subscribed', 'true')
 
+    // Show celebration confetti
+    setShowConfetti(true)
+
     // Auto-close after 3 seconds
     setTimeout(() => {
+      setShowConfetti(false)
       setIsLoaded(false)
       setTimeout(() => setIsVisible(false), 300)
     }, 3000)
@@ -66,6 +84,20 @@ export function BookPromotionPopup() {
   if (!isVisible) return null
 
   return (
+    <>
+      {/* Confetti outside AnimatePresence to prevent flicker */}
+      {showConfetti && (
+        <div className="fixed inset-0 z-[9999] pointer-events-none">
+          <Confetti
+            width={typeof window !== 'undefined' ? window.innerWidth : 1000}
+            height={typeof window !== 'undefined' ? window.innerHeight : 800}
+            recycle={false}
+            numberOfPieces={500}
+            gravity={0.3}
+          />
+        </div>
+      )}
+
     <AnimatePresence>
       {isVisible && (
         <motion.div
@@ -293,5 +325,6 @@ export function BookPromotionPopup() {
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   )
 }
