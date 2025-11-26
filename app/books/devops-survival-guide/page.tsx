@@ -12,21 +12,21 @@ export const metadata: Metadata = {
     description: 'A comprehensive ebook for engineers who want to master DevOps practices without burning out. 14 chapters covering everything from your first day to driving organizational change.',
     type: 'website',
     url: '/books/devops-survival-guide',
-    images: [
-      {
-        url: '/images/books/devops-survival-guide-og.svg',
-        width: 1200,
-        height: 630,
-        alt: 'DevOps Survival Guide',
+   images: [
+     {
+       url: '/images/books/devops-survival-guide-og.png',
+       width: 1200,
+       height: 630,
+       alt: 'DevOps Survival Guide',
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'DevOps Survival Guide - Real-world DevOps without the BS',
-    description: 'A comprehensive ebook for engineers who want to master DevOps practices without burning out.',
-    images: ['/images/books/devops-survival-guide-og.svg'],
-  },
+   card: 'summary_large_image',
+   title: 'DevOps Survival Guide - Real-world DevOps without the BS',
+   description: 'A comprehensive ebook for engineers who want to master DevOps practices without burning out.',
+   images: ['/images/books/devops-survival-guide-og.png'],
+ },
 };
 
 export default function DevOpsSurvivalGuidePage() {
