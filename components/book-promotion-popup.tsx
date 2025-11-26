@@ -113,6 +113,12 @@ export function BookPromotionPopup() {
             className="relative w-full max-w-[95vw] sm:max-w-md md:max-w-lg"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Close button - more visible on mobile */}
+            <button
+              onClick={handleDismiss}
+              className="absolute top-2 right-2 sm:-top-2 sm:-right-2 z-10 p-2 sm:p-2.5 rounded-full bg-background/95 backdrop-blur-sm border-2 border-border shadow-xl hover:bg-muted transition-all duration-200 hover:scale-110 active:scale-95"
+              aria-label="Close popup"
+            >
               <X className="h-6 w-6 sm:h-5 sm:w-5 stroke-[2.5]" />
             </button>
 
