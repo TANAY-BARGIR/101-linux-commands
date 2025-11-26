@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BookOpen, X, Sparkles, Gift, Zap, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import confetti from 'canvas-confetti'
 
 export function BookPromotionPopup() {
   const [isVisible, setIsVisible] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [email, setEmail] = useState('')
   const [showThankYou, setShowThankYou] = useState(false)
+  const confettiTriggered = useRef(false)
 
   useEffect(() => {
     // Check if user has already dismissed or subscribed
@@ -29,6 +31,50 @@ export function BookPromotionPopup() {
 
     return () => clearTimeout(timer)
   }, [])
+
+  // Trigger confetti when popup becomes visible
+  useEffect(() => {
+    if (isVisible && isLoaded && !confettiTriggered.current) {
+      confettiTriggered.current = true
+      
+      // Initial burst from multiple angles
+      setTimeout(() => {
+        const duration = 3000
+        const animationEnd = Date.now() + duration
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 }
+
+        const randomInRange = (min: number, max: number) => {
+          return Math.random() * (max - min) + min
+        }
+
+        const interval: any = setInterval(() => {
+          const timeLeft = animationEnd - Date.now()
+
+          if (timeLeft <= 0) {
+            return clearInterval(interval)
+          }
+
+          const particleCount = 50 * (timeLeft / duration)
+
+          // Confetti from left side
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+            colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b'],
+          })
+
+          // Confetti from right side
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+            colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b'],
+          })
+        }, 250)
+      }, 400) // Delay to sync with popup animation
+    }
+  }, [isVisible, isLoaded])
 
   const handleDismiss = () => {
     setIsLoaded(false)
@@ -55,6 +101,35 @@ export function BookPromotionPopup() {
     // Show thank you message
     setShowThankYou(true)
     localStorage.setItem('book-promo-subscribed', 'true')
+
+    // Celebration confetti for subscription
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'],
+      zIndex: 9999,
+    })
+
+    // Additional star burst
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#3b82f6', '#8b5cf6', '#ec4899'],
+        zIndex: 9999,
+      })
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#10b981', '#f59e0b', '#06b6d4'],
+        zIndex: 9999,
+      })
+    }, 250)
 
     // Auto-close after 3 seconds
     setTimeout(() => {
