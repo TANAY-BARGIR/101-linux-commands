@@ -33,6 +33,12 @@ jobs:
       - name: Generate digest
         run: pnpm devops-daily:generate-news:no-ai
 
+      - name: Generate digest images
+        run: pnpm generate:images
+
+      - name: Convert SVG to PNG
+        run: pnpm convert:svg-to-png
+
       - name: Get current week and year
         id: week
         run: |
